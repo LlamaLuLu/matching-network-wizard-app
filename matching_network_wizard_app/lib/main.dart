@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Tx Line',
+      title: 'Matching Network Wizard',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: 'Poppins'),
       home: StartPage(),
