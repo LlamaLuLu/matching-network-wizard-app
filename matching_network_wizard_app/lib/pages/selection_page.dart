@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class StartPage extends StatelessWidget {
-  const StartPage({super.key});
+class SelectionPage extends StatelessWidget {
+  const SelectionPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // button to start
+    // cards for 3 types & auto matching
     return const Placeholder();
   }
 }
