@@ -18,6 +18,9 @@ class SavedData {
   // frequency
   static const String fKey = 'f';
 
+  // matching network type
+  static const String matchingNetworkTypeKey = 'matchingNetworkType';
+
   /*
     CALCULATED RESULTS:
   */
@@ -62,6 +65,15 @@ class SavedData {
   /*
     SAVE PAGE DATA:
   */
+
+  static Future<void> saveInputData(
+      double z0, double zLRe, double zLIm, double f) async {
+    Complex zL = Complex(zLRe, zLIm);
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await setZ0(z0);
+    await setZL(zL);
+    await setF(f);
+  }
 
   /*
     SETTERS & GETTERS:

@@ -47,7 +47,7 @@ class _InputPageState extends State<InputPage> {
                           label: 'Z',
                           controller: z0Controller,
                           subscript: '0',
-                          hintText: 'Source Impedance'),
+                          hintText: 'Characteristic Impedance'),
                       AppWidgets.textField(
                           hasSubscript: true,
                           label: 'Z',
@@ -74,7 +74,14 @@ class _InputPageState extends State<InputPage> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 90),
                 child: AppWidgets.pinkButton(
-                    'Next', () => ButtonFuncs.nextBtnInputs(context)),
+                    'Next',
+                    () => ButtonFuncs.nextBtnInputs(
+                          context,
+                          z0Controller,
+                          zLReController,
+                          zLImController,
+                          fController,
+                        )),
               ),
             ],
           ),

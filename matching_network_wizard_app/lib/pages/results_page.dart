@@ -116,6 +116,8 @@ class _ResultsPageState extends State<ResultsPage> {
                 ),
               ),
 
+              // get matching network type
+              // if not lumped model chosen -> show PCB design button
               Padding(
                 padding: const EdgeInsets.only(bottom: 25, top: 25),
                 child: AppWidgets.greenButton(
