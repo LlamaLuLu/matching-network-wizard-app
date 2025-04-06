@@ -42,17 +42,21 @@ class _PcbPageState extends State<PcbPage> {
                   ),
                 ),
               ),
+              const SizedBox(height: 30),
             ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add your action here
-        },
-        backgroundColor: AppTheme.bg1,
-        foregroundColor: AppTheme.text1,
-        child: const Icon(Icons.save),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 35, right: 10),
+        child: FloatingActionButton(
+          onPressed: () {
+            // Add your action here
+          },
+          backgroundColor: AppTheme.bg1,
+          foregroundColor: AppTheme.text1,
+          child: const Icon(Icons.save),
+        ),
       ),
     );
   }
