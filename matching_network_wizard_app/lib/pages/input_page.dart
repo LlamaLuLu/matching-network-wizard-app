@@ -33,7 +33,11 @@ class _InputPageState extends State<InputPage> {
                   AppWidgets.backButton(context),
 
                   // heading: Input Parameters
-                  AppWidgets.headingText('Input Parameters', AppTheme.text2),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 35, bottom: 35),
+                    child: AppWidgets.headingText(
+                        'Input Parameters', AppTheme.text2),
+                  ),
 
                   // input fields
                   Column(
@@ -68,8 +72,8 @@ class _InputPageState extends State<InputPage> {
 
               // next button
               Padding(
-                padding: const EdgeInsets.only(bottom: 100),
-                child: AppWidgets.appButton(
+                padding: const EdgeInsets.only(bottom: 90),
+                child: AppWidgets.pinkButton(
                     'Next', () => ButtonFuncs.nextBtnInputs(context)),
               ),
             ],

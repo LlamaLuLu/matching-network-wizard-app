@@ -23,8 +23,11 @@ class SelectionPage extends StatelessWidget {
                   AppWidgets.backButton(context),
 
                   // heading: Selection
-                  AppWidgets.headingText(
-                      'Matching Network Selection', AppTheme.text2),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 30, bottom: 25),
+                    child: AppWidgets.headingText(
+                        'Matching Network Selection', AppTheme.text2),
+                  ),
                 ],
               ),
               Expanded(

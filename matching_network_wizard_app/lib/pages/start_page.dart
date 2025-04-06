@@ -32,8 +32,8 @@ class StartPage extends StatelessWidget {
 
               // start button
               Padding(
-                padding: const EdgeInsets.only(bottom: 160),
-                child: AppWidgets.appButton(
+                padding: const EdgeInsets.only(bottom: 150),
+                child: AppWidgets.pinkButton(
                     'Start', () => ButtonFuncs.startBtn(context)),
               ),
             ],
