@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:matching_network_wizard_app/utils/app_theme.dart';
+import 'package:matching_network_wizard_app/utils/saved_data.dart';
 
 class AppWidgets {
   //--------------------- BUTTONS ------------------------//
@@ -47,7 +48,7 @@ class AppWidgets {
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: AppTheme.bg2,
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 34),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 28),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
         ),
@@ -55,7 +56,7 @@ class AppWidgets {
       child: Text(
         btnText,
         style: TextStyle(
-          fontSize: 19,
+          fontSize: 16,
           fontWeight: FontWeight.w500,
           color: AppTheme.text2,
         ),
@@ -197,7 +198,8 @@ class AppWidgets {
   // FOR CAROUSEL SLIDER:
 
   // for params: heading name
-  static Widget buildParametersCard() {
+  static Widget buildParametersCard(String matchingNetworkType,
+      String matchingNetwork, bool autoMode, List<String> userInputs) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
       decoration: BoxDecoration(
@@ -216,7 +218,7 @@ class AppWidgets {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Matching Network Parameters',
+              '$matchingNetwork Parameters',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppTheme.text1,
@@ -225,24 +227,28 @@ class AppWidgets {
               ),
             ),
             const SizedBox(height: 15),
-            buildParameterRow('Network Type', 'Pi Network'),
+            // show network type only if on 'auto'
+            if (autoMode) buildParameterRow('Network Type', matchingNetwork),
+            // if matchingNetworkType == 'quarterwave'
+            // show: ZQWT
             buildParameterRow('Input Impedance', '50 Ω'),
             buildParameterRow('Output Impedance', '75 Ω'),
-            buildParameterRow('Central Frequency', '2.4 GHz'),
-            buildParameterRow('Bandwidth', '200 MHz'),
-            buildParameterRow('Q Factor', '2.5'),
-            buildParameterRow('C1 Value', '4.7 pF'),
-            buildParameterRow('L1 Value', '2.2 nH'),
-            buildParameterRow('C2 Value', '3.3 pF'),
-            const SizedBox(height: 15),
-            Text(
-              'Calculated VSWR: 1.15',
-              style: TextStyle(
-                color: AppTheme.text1,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+
+            Padding(
+              padding: const EdgeInsets.only(top: 20, bottom: 10),
+              child: Text(
+                'Your Inputs',
+                style: TextStyle(
+                  color: AppTheme.text1,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
+            // show user inputs: Z0, ZL, f
+            buildParameterRow('Z0', '${userInputs[0]} Ω'),
+            buildParameterRow('ZL', '${userInputs[1]} Ω'),
+            buildParameterRow('Frequency', '${userInputs[2]} Hz'),
           ],
         ),
       ),
@@ -251,23 +257,32 @@ class AppWidgets {
 
   static Widget buildParameterRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: AppTheme.text1,
-              fontSize: 14,
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: AppTheme.text1,
+                fontSize: 14,
+              ),
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              color: AppTheme.text1,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+          const SizedBox(width: 10), // Add spacing between label and value
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right, // Align to the right
+              maxLines: 2, // Allow up to 2 lines
+              overflow: TextOverflow.ellipsis, // Show '...' if it's too long
+              style: TextStyle(
+                color: AppTheme.text1,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],

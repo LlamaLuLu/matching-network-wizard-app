@@ -40,29 +40,48 @@ class ButtonFuncs {
     Navigator.pushNamed(context, '/selection');
   }
 
-  static void nextBtnResults(BuildContext context) {
+  static void pcbBtn(BuildContext context) {
     Navigator.pushNamed(context, '/pcb');
+  }
+
+  static void regenBtn(BuildContext context) async {
+    // clear saved data
+    await SavedData.clearSavedData();
+    Navigator.pushNamed(context, '/inputs');
   }
 
   // MATCHING NETWORK TYPES:
 
-  static void autoMatchingBtn(BuildContext context) {
+  static void autoMatchingBtn(BuildContext context) async {
     // placeholder for auto matching logic
+    // if auto-matching -> needs to choose most optimal matching network
+    await SavedData.setMatchingNetworkType('auto');
+    debugPrint('Auto Matching Network Type Selected');
+
     Navigator.pushNamed(context, '/results');
   }
 
-  static void quarterWaveBtn(BuildContext context) {
+  static void quarterWaveBtn(BuildContext context) async {
     // placeholder for QWT button logic
+    await SavedData.setMatchingNetworkType('quarterwave');
+    debugPrint('Quarter Wave Transformer Selected');
+
     Navigator.pushNamed(context, '/results');
   }
 
-  static void lumpedElementBtn(BuildContext context) {
+  static void lumpedElementBtn(BuildContext context) async {
     // placeholder for lumped element button logic
+    await SavedData.setMatchingNetworkType('lumped');
+    debugPrint('Lumped Element Matching Network Selected');
+
     Navigator.pushNamed(context, '/results');
   }
 
-  static void singleStubBtn(BuildContext context) {
+  static void singleStubBtn(BuildContext context) async {
     // placeholder for single stub button logic
+    await SavedData.setMatchingNetworkType('singlestub');
+    debugPrint('Single Stub Matching Network Selected');
+
     Navigator.pushNamed(context, '/results');
   }
 }

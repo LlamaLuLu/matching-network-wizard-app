@@ -1,9 +1,11 @@
+import 'package:complex/complex.dart';
 import 'package:flutter/material.dart';
 import 'package:matching_network_wizard_app/utils/app_theme.dart';
 import 'package:matching_network_wizard_app/utils/app_widgets.dart';
 import 'package:matching_network_wizard_app/utils/button_funcs.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:matching_network_wizard_app/utils/saved_data.dart';
 
 class ResultsPage extends StatefulWidget {
   const ResultsPage({super.key});
@@ -13,10 +15,17 @@ class ResultsPage extends StatefulWidget {
 }
 
 class _ResultsPageState extends State<ResultsPage> {
-  int _currentIndex = 0;
   final CarouselSliderController _carouselController =
       CarouselSliderController();
   final List<String> _pageLabels = ['Parameters', 'Circuit', 'Graph'];
+
+  // retrieved data
+  String matchingNetworkType = '';
+  // vars to be used
+  int _currentIndex = 0;
+  String matchingNetwork = '';
+  bool autoMode = false;
+  List<String> userInputs = ['0', '0', '0'];
 
   // Sample data for the impedance graph (replace with your actual data)
   final List<FlSpot> impedanceData = [
@@ -30,6 +39,44 @@ class _ResultsPageState extends State<ResultsPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    loadResults();
+  }
+
+  Future<void> loadResults() async {
+    // auto-mode
+    bool auto = await SavedData.getAutoMode();
+    autoMode = auto;
+    debugPrint('Auto Mode: $autoMode');
+
+    // matching network type
+    matchingNetworkType = await SavedData.getMatchingNetworkType();
+    debugPrint('Retrieved Matching Network Type: $matchingNetworkType');
+    if (matchingNetworkType == 'quarterwave') {
+      matchingNetwork = 'Quarter Wave Transformer';
+    } else if (matchingNetworkType == 'lumped') {
+      matchingNetwork = 'Lumped Element Matching';
+    } else if (matchingNetworkType == 'singlestub') {
+      matchingNetwork = 'Single Stub Matching';
+    } else {
+      matchingNetwork = 'Auto-Matching Wizard';
+    }
+
+    // user inputs
+    double z0 = await SavedData.getZ0();
+    Complex zL = await SavedData.getZL();
+    double f = await SavedData.getF();
+    userInputs = [
+      z0.toString(),
+      '(${zL.real.toString()}) +\nj(${zL.imaginary.toString()})',
+      f.toStringAsExponential(2)
+    ];
+    debugPrint('Retrieved User Inputs: $userInputs');
+
+    setState(() {});
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.bg3,
@@ -49,7 +96,7 @@ class _ResultsPageState extends State<ResultsPage> {
 
                   // heading: Results
                   Padding(
-                    padding: const EdgeInsets.only(top: 15, bottom: 30),
+                    padding: const EdgeInsets.only(top: 15, bottom: 25),
                     child: AppWidgets.headingText('Results', AppTheme.text2),
                   ),
                 ],
@@ -97,7 +144,8 @@ class _ResultsPageState extends State<ResultsPage> {
               Expanded(
                 child: CarouselSlider(
                   items: [
-                    AppWidgets.buildParametersCard(),
+                    AppWidgets.buildParametersCard(matchingNetworkType,
+                        matchingNetwork, autoMode, userInputs),
                     AppWidgets.buildCircuitDiagram(),
                     AppWidgets.buildImpedanceGraph(impedanceData),
                   ],
@@ -116,13 +164,32 @@ class _ResultsPageState extends State<ResultsPage> {
                 ),
               ),
 
-              // get matching network type
-              // if not lumped model chosen -> show PCB design button
-              Padding(
-                padding: const EdgeInsets.only(bottom: 25, top: 25),
-                child: AppWidgets.greenButton(
-                    'PCB Design', () => ButtonFuncs.nextBtnResults(context)),
-              ),
+              if (matchingNetworkType != 'lumped')
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 25, horizontal: 27),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      AppWidgets.greenButton(
+                        'Regenerate',
+                        () => ButtonFuncs.regenBtn(context),
+                      ),
+                      AppWidgets.greenButton(
+                        'PCB Design',
+                        () => ButtonFuncs.pcbBtn(context),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // if lumped -> regenerate button
+              if (matchingNetworkType == 'lumped')
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 25, top: 25),
+                  child: AppWidgets.greenButton(
+                      'Regenerate', () => ButtonFuncs.regenBtn(context)),
+                ),
             ],
           ),
         ),

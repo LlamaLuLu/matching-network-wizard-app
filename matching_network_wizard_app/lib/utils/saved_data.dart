@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:complex/complex.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SavedData {
@@ -20,6 +21,7 @@ class SavedData {
 
   // matching network type
   static const String matchingNetworkTypeKey = 'matchingNetworkType';
+  static const String autoModeKey = 'autoMode';
 
   /*
     CALCULATED RESULTS:
@@ -62,6 +64,41 @@ class SavedData {
     CLEAR:
   */
 
+  static Future<void> clearSavedData() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove(zLReKey);
+    await prefs.remove(zLImKey);
+    await prefs.remove(z0Key);
+    await prefs.remove(fKey);
+    await prefs.remove(matchingNetworkTypeKey);
+    await prefs.remove(autoModeKey);
+
+    debugPrint('Cleared all saved data');
+
+    // QUARTER WAVE TRANSFORMER:
+    await prefs.remove(zQWTKey);
+
+    // LUMPED ELEMENT MATCHING NETWORK:
+    await prefs.remove(xA1);
+    await prefs.remove(xA2);
+    await prefs.remove(bA1);
+    await prefs.remove(bA2);
+    await prefs.remove(xB1);
+    await prefs.remove(xB2);
+    await prefs.remove(bB1);
+    await prefs.remove(bB2);
+
+    // SINGLE STUB MATCHING NETWORK:
+    await prefs.remove(t1);
+    await prefs.remove(t2);
+    await prefs.remove(dDivLambda1);
+    await prefs.remove(dDivLambda2);
+    await prefs.remove(b1);
+    await prefs.remove(b2);
+    await prefs.remove(lOpenDivLambda1);
+    await prefs.remove(lOpenDivLambda2);
+  }
+
   /*
     SAVE PAGE DATA:
   */
@@ -78,6 +115,20 @@ class SavedData {
   /*
     SETTERS & GETTERS:
   */
+
+  // user inputs
+  static Future<List<String>> getUserInputs() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    double savedZ0 = await SavedData.getZ0();
+    Complex savedZL = await SavedData.getZL();
+    double savedF = await SavedData.getF();
+
+    return [
+      savedZ0.toString(),
+      savedZL.toString(),
+      savedF.toString()
+    ]; // Default value if not set
+  }
 
   // zL
   static Future<void> setZL(Complex zL) async {
@@ -115,6 +166,28 @@ class SavedData {
   static Future<double> getF() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getDouble(fKey) ?? 0.0; // Default value if not set
+  }
+
+  // matching network type
+  static Future<void> setMatchingNetworkType(String type) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (type == 'auto') {
+      await prefs.setBool(autoModeKey, true);
+    } else {
+      await prefs.setBool(autoModeKey, false);
+    }
+    await prefs.setString(matchingNetworkTypeKey, type);
+  }
+
+  static Future<String> getMatchingNetworkType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(matchingNetworkTypeKey) ??
+        ''; // Default value if not set
+  }
+
+  static Future<bool> getAutoMode() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(autoModeKey) ?? false; // Default value if not set
   }
 
   // zQWT
