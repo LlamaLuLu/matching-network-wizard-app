@@ -26,6 +26,7 @@ class _ResultsPageState extends State<ResultsPage> {
   String matchingNetwork = '';
   bool autoMode = false;
   List<String> userInputs = ['0', '0', '0'];
+  List<double> calculatedData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
   // Sample data for the impedance graph (replace with your actual data)
   final List<FlSpot> impedanceData = [
@@ -50,15 +51,49 @@ class _ResultsPageState extends State<ResultsPage> {
     autoMode = auto;
     debugPrint('Auto Mode: $autoMode');
 
-    // matching network type
+    // matching network type & calculated data
     matchingNetworkType = await SavedData.getMatchingNetworkType();
     debugPrint('Retrieved Matching Network Type: $matchingNetworkType');
     if (matchingNetworkType == 'quarterwave') {
       matchingNetwork = 'Quarter Wave Transformer';
+
+      double zQWT = await SavedData.getZQWT();
+      debugPrint('ZQWT: $zQWT');
+
+      calculatedData = [zQWT];
     } else if (matchingNetworkType == 'lumped') {
       matchingNetwork = 'Lumped Element Matching';
+
+      List<double> xA = await SavedData.getXA();
+      List<double> bA = await SavedData.getBA();
+      List<double> xB = await SavedData.getXB();
+      List<double> bB = await SavedData.getBB();
+      debugPrint('XA: $xA, BA: $bA, XB: $xB, BB: $bB');
+
+      calculatedData = [xA[0], xA[1], bA[0], bA[1], xB[0], xB[1], bB[0], bB[1]];
     } else if (matchingNetworkType == 'singlestub') {
-      matchingNetwork = 'Single Stub Matching';
+      matchingNetwork = 'Single Stub Tuning';
+
+      List<double> t = await SavedData.getT();
+      List<double> dDivLambda = await SavedData.getDDivLambda();
+      List<double> b = await SavedData.getB();
+      List<double> lOpenDivLambda = await SavedData.getLOpenDivLambda();
+      List<double> lShortDivLambda = await SavedData.getLShortDivLambda();
+      debugPrint(
+          'T: $t, DDivLambda: $dDivLambda, B: $b, LOpenDivLambda: $lOpenDivLambda, LShortDivLambda: $lShortDivLambda');
+
+      calculatedData = [
+        t[0],
+        t[1],
+        dDivLambda[0],
+        dDivLambda[1],
+        b[0],
+        b[1],
+        lOpenDivLambda[0],
+        lOpenDivLambda[1],
+        lShortDivLambda[0],
+        lShortDivLambda[1]
+      ];
     } else {
       matchingNetwork = 'Auto-Matching Wizard';
     }
@@ -70,7 +105,7 @@ class _ResultsPageState extends State<ResultsPage> {
     userInputs = [
       z0.toString(),
       '(${zL.real.toString()}) +\nj(${zL.imaginary.toString()})',
-      f.toStringAsExponential(2)
+      f.toStringAsExponential(3)
     ];
     debugPrint('Retrieved User Inputs: $userInputs');
 
@@ -145,7 +180,7 @@ class _ResultsPageState extends State<ResultsPage> {
                 child: CarouselSlider(
                   items: [
                     AppWidgets.buildParametersCard(matchingNetworkType,
-                        matchingNetwork, autoMode, userInputs),
+                        matchingNetwork, autoMode, calculatedData, userInputs),
                     AppWidgets.buildCircuitDiagram(),
                     AppWidgets.buildImpedanceGraph(impedanceData),
                   ],

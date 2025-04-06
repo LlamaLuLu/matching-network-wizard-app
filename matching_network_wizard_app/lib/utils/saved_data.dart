@@ -116,20 +116,6 @@ class SavedData {
     SETTERS & GETTERS:
   */
 
-  // user inputs
-  static Future<List<String>> getUserInputs() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    double savedZ0 = await SavedData.getZ0();
-    Complex savedZL = await SavedData.getZL();
-    double savedF = await SavedData.getF();
-
-    return [
-      savedZ0.toString(),
-      savedZL.toString(),
-      savedF.toString()
-    ]; // Default value if not set
-  }
-
   // zL
   static Future<void> setZL(Complex zL) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();

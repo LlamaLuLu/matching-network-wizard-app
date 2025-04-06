@@ -53,7 +53,7 @@ class SelectionPage extends StatelessWidget {
               ),
               Expanded(
                 child: AppWidgets.networkTypeCard(
-                    'Single-Stub\nMatching Network',
+                    'Single-Stub Tuning',
                     () => ButtonFuncs.singleStubBtn(context),
                     AppTheme.text5,
                     AppTheme.bg5),
