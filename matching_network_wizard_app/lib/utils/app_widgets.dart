@@ -3,14 +3,14 @@ import 'package:matching_network_wizard_app/utils/app_theme.dart';
 
 class AppWidgets {
   //--------------------- BUTTONS ------------------------//
-  static Widget backButton(BuildContext context, String route) {
+  static Widget backButton(BuildContext context) {
     return Align(
       alignment: Alignment.topLeft,
       child: IconButton(
         icon: const Icon(Icons.arrow_back),
         color: AppTheme.text2,
         onPressed: () {
-          Navigator.pushNamed(context, route);
+          Navigator.pop(context);
         },
       ),
     );
@@ -31,7 +31,7 @@ class AppWidgets {
       child: Text(
         btnText,
         style: TextStyle(
-          fontSize: 20,
+          fontSize: 19,
           fontWeight: FontWeight.w500,
           color: AppTheme.text1,
         ),
@@ -71,7 +71,7 @@ class AppWidgets {
             backgroundColor: bgColor, // Background color
             foregroundColor: fgColor, // Text color
             textStyle: const TextStyle(
-              fontSize: 17,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               height: 1.4,
             ),

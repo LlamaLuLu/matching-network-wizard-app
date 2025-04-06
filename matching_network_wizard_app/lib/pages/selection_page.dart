@@ -20,7 +20,7 @@ class SelectionPage extends StatelessWidget {
               Column(
                 children: [
                   // back arrow button
-                  AppWidgets.backButton(context, '/inputs'),
+                  AppWidgets.backButton(context),
 
                   // heading: Selection
                   AppWidgets.headingText(

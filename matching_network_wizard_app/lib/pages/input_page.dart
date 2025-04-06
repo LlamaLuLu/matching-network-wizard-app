@@ -30,7 +30,7 @@ class _InputPageState extends State<InputPage> {
               Column(
                 children: [
                   // back arrow button
-                  AppWidgets.backButton(context, '/start'),
+                  AppWidgets.backButton(context),
 
                   // heading: Input Parameters
                   AppWidgets.headingText('Input Parameters', AppTheme.text2),
