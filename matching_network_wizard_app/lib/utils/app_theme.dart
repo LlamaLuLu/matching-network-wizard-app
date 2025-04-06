@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class Theme {
+class AppTheme {
   // colour palette
   static const Color bg1 = Color(0xFFD9BBB0); // light pink
   static const Color text1 = Color(0xFF262920); // dark grey
