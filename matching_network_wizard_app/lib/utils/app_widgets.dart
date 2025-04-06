@@ -3,6 +3,19 @@ import 'package:matching_network_wizard_app/utils/app_theme.dart';
 
 class AppWidgets {
   //--------------------- BUTTONS ------------------------//
+  static Widget backButton(BuildContext context, String route) {
+    return Align(
+      alignment: Alignment.topLeft,
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        color: AppTheme.text2,
+        onPressed: () {
+          Navigator.pushNamed(context, route);
+        },
+      ),
+    );
+  }
+
   static Widget appButton(String btnText, VoidCallback onPressed) {
     return ElevatedButton(
       onPressed: () {
@@ -27,8 +40,56 @@ class AppWidgets {
   }
 
   //--------------------- HEADINGS ------------------------//
+  static Widget headingText(String text, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 30, bottom: 25),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
+    );
+  }
 
   //--------------------- COMPONENTS ------------------------//
+  static Widget networkTypeCard(
+      String label, VoidCallback onPressed, Color fgColor, Color bgColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+          vertical: 6, horizontal: 35), // Adjust spacing
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () {
+            onPressed(); // Navigate to parallel plate page
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: bgColor, // Background color
+            foregroundColor: fgColor, // Text color
+            textStyle: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20), // Smooth rounded corners
+            ),
+            elevation: 4,
+            padding: const EdgeInsets.symmetric(vertical: 20), // Same height
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+
   static Widget textField(
       {bool hasSubscript = false,
       required String label,

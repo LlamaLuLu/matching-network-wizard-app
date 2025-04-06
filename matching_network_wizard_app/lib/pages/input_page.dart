@@ -30,29 +30,10 @@ class _InputPageState extends State<InputPage> {
               Column(
                 children: [
                   // back arrow button
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      color: AppTheme.text2,
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/start');
-                      },
-                    ),
-                  ),
+                  AppWidgets.backButton(context, '/start'),
+
                   // heading: Input Parameters
-                  Padding(
-                    padding: const EdgeInsets.only(top: 40, bottom: 30),
-                    child: const Text(
-                      'Input Parameters',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.text2,
-                      ),
-                    ),
-                  ),
+                  AppWidgets.headingText('Input Parameters', AppTheme.text2),
 
                   // input fields
                   Column(
