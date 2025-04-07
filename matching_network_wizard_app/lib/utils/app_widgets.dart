@@ -250,7 +250,6 @@ class AppWidgets {
     }
   }
 
-  // for params: heading name
   static Widget buildParametersCard(
       String matchingNetworkType,
       String matchingNetwork,
@@ -657,6 +656,118 @@ class AppWidgets {
             _buildSeriesLegend(),
           // Legend for user frequency
           if (userFrequency != null) _buildFrequencyLegend(userFrequency),
+        ],
+      ),
+    );
+  }
+
+  static Widget buildPCBParametersCard() {
+    return Container(
+      padding: const EdgeInsets.only(top: 30, left: 30, right: 30, bottom: 20),
+      decoration: BoxDecoration(
+        color: AppTheme.bg1,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'PCB Parameters',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppTheme.text1,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 15),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Column(
+                children: [
+                  buildParameterRow('w', 'value'),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, bottom: 10),
+              child: resultHeading2('Your Inputs:'),
+            ),
+            buildParameterRow('h', ' m'),
+            buildParameterRow('epsilonR', ' Hz'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget buildPCBDiagram() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 15),
+      decoration: BoxDecoration(
+        color: AppTheme.bg1,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            'PCB Diagram',
+            style: TextStyle(
+              color: AppTheme.text1,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: Center(
+              // Replace this placeholder with your actual image loading
+              child: Image.asset(
+                'assets/image.PNG',
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: AppTheme.bg2.withValues(alpha: 0.3),
+                    child: Center(
+                      child: Icon(
+                        Icons.image_not_supported,
+                        size: 64,
+                        color: AppTheme.text1,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 15),
+          // replace with diagram label
+          Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Text(
+              'Microstrip Support',
+              style: TextStyle(
+                color: AppTheme.text1,
+                fontSize: 14,
+              ),
+            ),
+          ),
         ],
       ),
     );

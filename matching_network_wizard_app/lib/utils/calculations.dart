@@ -233,4 +233,11 @@ class Calculations {
     }
     return lShortDivLambdaList;
   }
+
+  //------------------- PCB CALCULATIONS ----------------------//
+  static double calcW(double z0, double h, double epsilonR) {
+    //double epsilon_eff = (epsilon_r + 1) / 2 + ((epsilon_r - 1) / 2) * (1 / (math.sqrt(1 + 12 * h / Z0)));
+    //double w = (Z0 / 60) * math.sqrt(2 / (epsilon_eff + 1)) * math.log((4 * h / w) + math.sqrt(1 + (4 * h / w)**2))
+    return 0;
+  }
 }

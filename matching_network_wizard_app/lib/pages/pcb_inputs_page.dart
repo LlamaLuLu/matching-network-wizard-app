@@ -44,10 +44,10 @@ class _PcbInputsPageState extends State<PcbInputsPage> {
                       // input fields
                       Column(
                         children: [
-                          AppWidgets.textField(
-                              label: 'w',
-                              controller: wController,
-                              hintText: 'Track width (mm)'),
+                          // AppWidgets.textField(
+                          //     label: 'w',
+                          //     controller: wController,
+                          //     hintText: 'Track width (mm)'),
                           AppWidgets.textField(
                               label: 'h ',
                               controller: hController,

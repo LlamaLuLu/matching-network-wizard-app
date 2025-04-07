@@ -1,6 +1,9 @@
+import 'package:carousel_slider/carousel_options.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:matching_network_wizard_app/utils/app_theme.dart';
 import 'package:matching_network_wizard_app/utils/app_widgets.dart';
+import 'package:matching_network_wizard_app/utils/button_funcs.dart';
 
 class PcbPage extends StatefulWidget {
   const PcbPage({super.key});
@@ -10,6 +13,12 @@ class PcbPage extends StatefulWidget {
 }
 
 class _PcbPageState extends State<PcbPage> {
+  final CarouselSliderController _carouselController =
+      CarouselSliderController();
+  final List<String> _pageLabels = ['Parameters', 'PCB'];
+
+  int _currentIndex = 0;
+
   @override
   Widget build(BuildContext context) {
     // inputs for epsilon_r, height, width, length, and thickness
@@ -34,24 +43,82 @@ class _PcbPageState extends State<PcbPage> {
                   ),
                 ],
               ),
-              Expanded(
-                child: Container(
-                  color: AppTheme.bg1,
-                  child: const Center(
-                    child: Text(
-                      'PCB Design will be displayed here',
-                      style: TextStyle(color: AppTheme.text1),
+
+              // Text labels for carousel pages
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: _pageLabels.asMap().entries.map((entry) {
+                  final int index = entry.key;
+                  final String label = entry.value;
+                  return GestureDetector(
+                    onTap: () {
+                      _carouselController.animateToPage(index);
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12.0, vertical: 6.0),
+                      decoration: BoxDecoration(
+                        color: _currentIndex == index
+                            ? AppTheme.bg2
+                            : AppTheme.bg3.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          color: _currentIndex == index
+                              ? AppTheme.text2
+                              : AppTheme.text3,
+                          fontWeight: _currentIndex == index
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
+                  );
+                }).toList(),
+              ),
+
+              const SizedBox(height: 18),
+
+              Expanded(
+                child: CarouselSlider(
+                  items: [
+                    AppWidgets.buildPCBParametersCard(),
+                    AppWidgets.buildPCBDiagram(),
+                  ],
+                  options: CarouselOptions(
+                    height: double.infinity,
+                    viewportFraction: 0.9,
+                    enlargeCenterPage: true,
+                    enableInfiniteScroll: false,
+                    onPageChanged: (index, reason) {
+                      setState(() {
+                        _currentIndex = index;
+                      });
+                    },
                   ),
+                  carouselController: _carouselController,
                 ),
               ),
-              const SizedBox(height: 30),
+
+              const SizedBox(height: 25),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 36, top: 15, left: 35),
+                  child: AppWidgets.greenButton(
+                      'Regenerate', () => ButtonFuncs.regenBtn(context)),
+                ),
+              ),
             ],
           ),
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 40, right: 15),
+        padding: const EdgeInsets.only(bottom: 30, right: 32),
         child: FloatingActionButton(
           onPressed: () {
             // Add your action here
