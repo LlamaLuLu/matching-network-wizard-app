@@ -5,6 +5,7 @@ import 'package:matching_network_wizard_app/utils/app_widgets.dart';
 import 'package:matching_network_wizard_app/utils/button_funcs.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:matching_network_wizard_app/utils/calculations.dart';
 import 'package:matching_network_wizard_app/utils/saved_data.dart';
 
 class ResultsPage extends StatefulWidget {
@@ -52,6 +53,13 @@ class _ResultsPageState extends State<ResultsPage> {
     autoMode = auto;
     debugPrint('Auto Mode: $autoMode');
 
+    // user inputs
+    double z0 = await SavedData.getZ0();
+    Complex zL = await SavedData.getZL();
+    double f = await SavedData.getF();
+    userInputs = [z0, zL.real, zL.imaginary, f];
+    debugPrint('Retrieved User Inputs: $userInputs');
+
     // matching network type & calculated data
     matchingNetworkType = await SavedData.getMatchingNetworkType();
     debugPrint('Retrieved Matching Network Type: $matchingNetworkType');
@@ -59,9 +67,10 @@ class _ResultsPageState extends State<ResultsPage> {
       matchingNetwork = 'Quarter Wave Transformer';
 
       double zQWT = await SavedData.getZQWT();
-      debugPrint('ZQWT: $zQWT');
+      double lambdaDiv4 = Calculations.lambdaDiv4(f);
+      debugPrint('ZQWT: $zQWT, LambdaDiv4: $lambdaDiv4');
 
-      calculatedData = [zQWT];
+      calculatedData = [zQWT, lambdaDiv4];
     } else if (matchingNetworkType == 'lumped') {
       matchingNetwork = 'Lumped Element Matching';
 
@@ -111,13 +120,6 @@ class _ResultsPageState extends State<ResultsPage> {
     } else {
       matchingNetwork = 'Auto-Matching Wizard';
     }
-
-    // user inputs
-    double z0 = await SavedData.getZ0();
-    Complex zL = await SavedData.getZL();
-    double f = await SavedData.getF();
-    userInputs = [z0, zL.real, zL.imaginary, f];
-    debugPrint('Retrieved User Inputs: $userInputs');
 
     setState(() {});
   }
@@ -196,7 +198,8 @@ class _ResultsPageState extends State<ResultsPage> {
                         calculatedData,
                         userInputs,
                         capIndValues),
-                    AppWidgets.buildCircuitDiagram(),
+                    AppWidgets.buildCircuitDiagram(
+                        matchingNetwork, matchingNetworkType),
                     AppWidgets.buildImpedanceGraph(impedanceData),
                   ],
                   options: CarouselOptions(

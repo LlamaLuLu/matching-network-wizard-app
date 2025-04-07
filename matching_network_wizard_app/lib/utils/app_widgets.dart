@@ -258,7 +258,7 @@ class AppWidgets {
       List<double> userInputs,
       List<double> capIndValues) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 30),
+      padding: const EdgeInsets.only(top: 30, left: 30, right: 30, bottom: 20),
       decoration: BoxDecoration(
         color: AppTheme.bg1,
         borderRadius: BorderRadius.circular(18),
@@ -285,17 +285,23 @@ class AppWidgets {
             ),
             const SizedBox(height: 15),
             // show network type only if on 'auto'
-            if (autoMode) buildParameterRow('Network Type', matchingNetwork),
+            //if (autoMode) buildParameterRow('Network Type', matchingNetwork),
             // if matchingNetworkType == 'quarterwave'
             // show: ZQWT
             if (matchingNetworkType == 'quarterwave')
               Padding(
                 padding: const EdgeInsets.only(bottom: 20),
-                child: buildParameterRow(
-                    'ZQWT',
-                    (userInputs[2] != 0)
-                        ? 'Load not\npurely real'
-                        : '${calculatedData[0].toStringAsFixed(3)} Ω'),
+                child: Column(
+                  children: [
+                    buildParameterRow(
+                        'ZQWT',
+                        (userInputs[2] != 0)
+                            ? 'Load not\npurely real'
+                            : '${calculatedData[0].toStringAsFixed(3)} Ω'),
+                    buildParameterRow(('\u03BB/4'),
+                        '${calculatedData[1].toStringAsExponential(3)} m'),
+                  ],
+                ),
               ),
             if (matchingNetworkType == 'lumped')
               Column(
@@ -469,7 +475,7 @@ class AppWidgets {
               ),
             ),
           ),
-          const SizedBox(width: 10), // Add spacing between label and value
+          const SizedBox(width: 7), // Add spacing between label and value
           Expanded(
             child: Text(
               value,
@@ -488,10 +494,9 @@ class AppWidgets {
     );
   }
 
-  // for params: img path, diagram label
-  static Widget buildCircuitDiagram() {
+  static Widget buildCircuitDiagram(String label, String matchingNetworkType) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 18),
+      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 8),
       decoration: BoxDecoration(
         color: AppTheme.bg1,
         borderRadius: BorderRadius.circular(18),
@@ -514,12 +519,16 @@ class AppWidgets {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Expanded(
             child: Center(
               // Replace this placeholder with your actual image loading
               child: Image.asset(
-                'assets/images/circuit_diagram.png',
+                (matchingNetworkType == 'quarterwave')
+                    ? 'assets/qwt_diag.PNG'
+                    : (matchingNetworkType == 'lumped')
+                        ? 'assets/lumped_diag.PNG'
+                        : 'assets/stub_diag.PNG',
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
@@ -538,11 +547,14 @@ class AppWidgets {
           ),
           const SizedBox(height: 15),
           // replace with diagram label
-          Text(
-            'Pi Network Configuration',
-            style: TextStyle(
-              color: AppTheme.text1,
-              fontSize: 14,
+          Padding(
+            padding: const EdgeInsets.only(bottom: 15),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: AppTheme.text1,
+                fontSize: 14,
+              ),
             ),
           ),
         ],

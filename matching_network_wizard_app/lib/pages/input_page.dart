@@ -23,14 +23,17 @@ class _InputPageState extends State<InputPage> {
       backgroundColor: AppTheme.bg2,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(
                 children: [
                   // back arrow button
-                  AppWidgets.backButton(context),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 11),
+                    child: AppWidgets.backButton(context),
+                  ),
 
                   // heading: Input Parameters
                   Padding(
@@ -47,7 +50,7 @@ class _InputPageState extends State<InputPage> {
                           label: 'Z',
                           controller: z0Controller,
                           subscript: '0',
-                          hintText: 'Characteristic Impedance'),
+                          hintText: 'Characteristic Impedance (50 \u03A9)'),
                       AppWidgets.textField(
                           hasSubscript: true,
                           label: 'Z',

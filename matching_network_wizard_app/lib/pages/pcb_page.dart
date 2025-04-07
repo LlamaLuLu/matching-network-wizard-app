@@ -28,7 +28,10 @@ class _PcbPageState extends State<PcbPage> {
                   AppWidgets.backButton(context),
 
                   // heading: PCB Design
-                  AppWidgets.headingText('PCB Design', AppTheme.text2),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20, bottom: 25),
+                    child: AppWidgets.headingText('PCB Design', AppTheme.text2),
+                  ),
                 ],
               ),
               Expanded(
@@ -48,13 +51,13 @@ class _PcbPageState extends State<PcbPage> {
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 35, right: 10),
+        padding: const EdgeInsets.only(bottom: 40, right: 15),
         child: FloatingActionButton(
           onPressed: () {
             // Add your action here
           },
-          backgroundColor: AppTheme.bg1,
-          foregroundColor: AppTheme.text1,
+          backgroundColor: AppTheme.bg2,
+          foregroundColor: AppTheme.text2,
           child: const Icon(Icons.save),
         ),
       ),

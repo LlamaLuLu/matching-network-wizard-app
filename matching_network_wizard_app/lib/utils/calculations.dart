@@ -11,6 +11,12 @@ class Calculations {
     return zQWT;
   }
 
+  static double lambdaDiv4(double f) {
+    double lambda = 1 / f;
+    double lambdaDiv4 = lambda / 4;
+    return lambdaDiv4;
+  }
+
   //------------------ LUMPED ELEMENT MATCHING NETWORK --------------------//
   static List<double> calcCapIndValues(
       List<double> bList, List<double> xList, double z0, double f) {
@@ -48,40 +54,6 @@ class Calculations {
     return capIndValues;
   }
 
-  static List<double> calcCapIndValues2(
-      List<double> bList, List<double> xList, double z0, double f) {
-    final List<double> capIndValues = [];
-    for (int i = 0; i < bList.length; i++) {
-      double b = bList[i];
-      double x = xList[i];
-      double ci, ic;
-
-      String xType = AppWidgets.capOrInd('x', x);
-      String bType = AppWidgets.capOrInd('b', b);
-
-      if (xType == 'Capacitor') {
-        ci = calcCap(b, x, z0, f);
-      } else if (xType == 'Inductor') {
-        ci = calcInd(b, x, z0, f);
-      } else {
-        ci = 0;
-      }
-
-      if (bType == 'Capacitor') {
-        ic = calcCap(b, x, z0, f);
-      } else if (bType == 'Inductor') {
-        ic = calcInd(b, x, z0, f);
-      } else {
-        ic = 0;
-      }
-
-      capIndValues.add(ci);
-      capIndValues.add(ic);
-      debugPrint('ci: $ci, ic: $ic');
-    }
-    return capIndValues;
-  }
-
   static double calcCapX(double X, double z0, double f) {
     double c, term1, term2;
     double x = X / z0;
@@ -104,23 +76,6 @@ class Calculations {
     return c;
   }
 
-  static double calcCap(double B, double X, double z0, double f) {
-    double c, term1, term2;
-    double b = B * z0;
-    double x = X / z0;
-
-    if (b > 0) {
-      term1 = 1 / (2 * pi * f);
-      term2 = b / z0;
-    } else {
-      term1 = -1 / (2 * pi * f);
-      term2 = 1 / (x * z0);
-    }
-    c = term1 * term2;
-
-    return c;
-  }
-
   static double calcIndX(double X, double z0, double f) {
     double l, term1, term2;
     double x = X / z0;
@@ -138,23 +93,6 @@ class Calculations {
 
     term1 = -1 / (2 * pi * f);
     term2 = z0 / b;
-    l = term1 * term2;
-
-    return l;
-  }
-
-  static double calcInd(double B, double X, double z0, double f) {
-    double l, term1, term2;
-    double b = B * z0;
-    double x = X / z0;
-
-    if (b > 0) {
-      term1 = 1 / (2 * pi * f);
-      term2 = x * z0;
-    } else {
-      term1 = -1 / (2 * pi * f);
-      term2 = z0 / b;
-    }
     l = term1 * term2;
 
     return l;
@@ -223,13 +161,14 @@ class Calculations {
     if (zLRe == z0) {
       final t = -zLIm / (2 * z0);
 
-      return [t];
+      return [t, 0];
     } else {
-      final term1 = sqrt((zLRe * (pow((z0 - zLRe), 2))) + pow(zLIm, 2));
-      final term2 = zLRe - z0;
+      final term1 = pow((z0 - zLRe), 2) + pow(zLIm, 2);
+      final term2 = sqrt(zLRe * term1 / z0);
+      final term3 = zLRe - z0;
 
-      final t1 = (zLIm + term1) / term2;
-      final t2 = (zLIm - term1) / term2;
+      final t1 = (zLIm + term2) / term3;
+      final t2 = (zLIm - term2) / term3;
 
       return [t1, t2];
     }

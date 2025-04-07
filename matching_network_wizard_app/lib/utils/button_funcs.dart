@@ -22,10 +22,10 @@ class ButtonFuncs {
     TextEditingController zLImController,
     TextEditingController fController,
   ) async {
-    double z0 = double.tryParse(z0Controller.text) ?? 0.0;
+    double z0 = double.tryParse(z0Controller.text) ?? 50.0;
     double zLRe = double.tryParse(zLReController.text) ?? 0.0;
     double zLIm = double.tryParse(zLImController.text) ?? 0.0;
-    double f = double.tryParse(fController.text) ?? 0.0;
+    double f = double.tryParse(fController.text) ?? 1.0;
     f *= pow(10, 6);
     debugPrint('Processed Inputs: \nz0: $z0, zLRe: $zLRe, zLIm: $zLIm, f: $f');
 
@@ -56,14 +56,21 @@ class ButtonFuncs {
   static void autoMatchingBtn(BuildContext context) async {
     // placeholder for auto matching logic
     // if auto-matching -> needs to choose most optimal matching network
-    await SavedData.setMatchingNetworkType('auto');
-    debugPrint('Auto Matching Network Type Selected');
+    await SavedData.setAutoMode(true);
 
-    Navigator.pushNamed(context, '/results');
+    Complex zL = await SavedData.getZL();
+    if (zL.imaginary == 0) {
+      quarterWaveBtn(context);
+      debugPrint('Quarter Wave Transformer Selected');
+    } else {
+      lumpedElementBtn(context);
+      debugPrint('Auto Matching Network Type Selected');
+    }
   }
 
   static void quarterWaveBtn(BuildContext context) async {
     // placeholder for QWT button logic
+
     await SavedData.setMatchingNetworkType('quarterwave');
     debugPrint('Quarter Wave Transformer Selected');
 
@@ -81,6 +88,7 @@ class ButtonFuncs {
 
   static void lumpedElementBtn(BuildContext context) async {
     // placeholder for lumped element button logic
+
     await SavedData.setMatchingNetworkType('lumped');
     debugPrint('Lumped Element Matching Network Selected');
 
@@ -90,6 +98,7 @@ class ButtonFuncs {
     double zLRe = zL.real;
     double zLIm = zL.imaginary;
     double f = await SavedData.getF();
+
     // calculate
     List<double> lumpedInside = Calculations.calcLumpedInside(z0, zLRe, zLIm);
     List<double> lumpedOutside = Calculations.calcLumpedOutside(z0, zLRe, zLIm);
@@ -115,14 +124,30 @@ class ButtonFuncs {
 
   static void singleStubBtn(BuildContext context) async {
     // placeholder for single stub button logic
+
     await SavedData.setMatchingNetworkType('singlestub');
     debugPrint('Single Stub Matching Network Selected');
 
     // get values
+    double z0 = await SavedData.getZ0();
+    Complex zL = await SavedData.getZL();
+    double zLRe = zL.real;
+    double zLIm = zL.imaginary;
+    double f = await SavedData.getF();
 
     // calculate
+    List<double> t = Calculations.calcT(z0, zLRe, zLIm);
+    List<double> dDivLambda = Calculations.calcDDivLambda(t);
+    List<double> b = Calculations.calcBStub(t, z0, zLRe, zLIm);
+    List<double> lOpenDivLambda = Calculations.calcLOpenDivLambda(b, z0);
+    List<double> lShortDivLambda = Calculations.calcLShortDivLambda(b, z0);
 
     // save result
+    await SavedData.setT(t);
+    await SavedData.setDDivLambda(dDivLambda);
+    await SavedData.setB(b);
+    await SavedData.setLOpenDivLambda(lOpenDivLambda);
+    await SavedData.setLShortDivLambda(lShortDivLambda);
 
     Navigator.pushNamed(context, '/results');
   }

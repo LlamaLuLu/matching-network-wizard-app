@@ -180,7 +180,7 @@ class SavedData {
 
   static Future<double> getZ0() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble(z0Key) ?? 0.0; // Default value if not set
+    return prefs.getDouble(z0Key) ?? 50.0; // Default value if not set
   }
 
   // f
@@ -197,11 +197,7 @@ class SavedData {
   // matching network type
   static Future<void> setMatchingNetworkType(String type) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (type == 'auto') {
-      await prefs.setBool(autoModeKey, true);
-    } else {
-      await prefs.setBool(autoModeKey, false);
-    }
+
     await prefs.setString(matchingNetworkTypeKey, type);
   }
 
@@ -209,6 +205,12 @@ class SavedData {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(matchingNetworkTypeKey) ??
         ''; // Default value if not set
+  }
+
+  // auto mode
+  static Future<void> setAutoMode(bool autoMode) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(autoModeKey, autoMode);
   }
 
   static Future<bool> getAutoMode() async {
