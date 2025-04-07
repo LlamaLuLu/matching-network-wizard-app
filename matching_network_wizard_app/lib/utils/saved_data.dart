@@ -34,13 +34,13 @@ class SavedData {
 
   // LUMPED ELEMENT MATCHING NETWORK:
 
-  // A: series first solution
+  // A: inside solution (RL > Z0)
   static const String xA1 = 'xA1';
   static const String xA2 = 'xA2';
   static const String bA1 = 'bA1';
   static const String bA2 = 'bA2';
 
-  // B: shunt first solution
+  // B: outside solution (RL < Z0)
   static const String xB1 = 'xB1';
   static const String xB2 = 'xB2';
   static const String bB1 = 'bB1';
@@ -110,6 +110,15 @@ class SavedData {
     await setZ0(z0);
     await setZL(zL);
     await setF(f);
+  }
+
+  static Future<void> saveLumpedData(List<double> xA, List<double> bA,
+      List<double> xB, List<double> bB) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await setXA(xA);
+    await setBA(bA);
+    await setXB(xB);
+    await setBB(bB);
   }
 
   /*

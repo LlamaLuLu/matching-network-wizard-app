@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:complex/complex.dart';
 import 'package:flutter/material.dart';
+import 'package:matching_network_wizard_app/utils/calculations.dart';
 import 'package:matching_network_wizard_app/utils/saved_data.dart';
 
 // to pass in argument eg:
@@ -25,7 +26,7 @@ class ButtonFuncs {
     double zLRe = double.tryParse(zLReController.text) ?? 0.0;
     double zLIm = double.tryParse(zLImController.text) ?? 0.0;
     double f = double.tryParse(fController.text) ?? 0.0;
-    f *= pow(10, 9);
+    f *= pow(10, 6);
     debugPrint('Processed Inputs: \nz0: $z0, zLRe: $zLRe, zLIm: $zLIm, f: $f');
 
     await SavedData.saveInputData(z0, zLRe, zLIm, f);
@@ -66,6 +67,15 @@ class ButtonFuncs {
     await SavedData.setMatchingNetworkType('quarterwave');
     debugPrint('Quarter Wave Transformer Selected');
 
+    // get values
+    double z0 = await SavedData.getZ0();
+    Complex zL = await SavedData.getZL();
+    double zLRe = zL.real;
+    // calculate
+    double zQWT = Calculations.calcZQWT(z0, zLRe);
+    // save result
+    await SavedData.setZQWT(zQWT);
+
     Navigator.pushNamed(context, '/results');
   }
 
@@ -74,6 +84,23 @@ class ButtonFuncs {
     await SavedData.setMatchingNetworkType('lumped');
     debugPrint('Lumped Element Matching Network Selected');
 
+    // get values
+    double z0 = await SavedData.getZ0();
+    Complex zL = await SavedData.getZL();
+    double zLRe = zL.real;
+    double zLIm = zL.imaginary;
+    // calculate
+    List<double> lumpedInside = Calculations.calcLumpedInside(z0, zLRe, zLIm);
+    List<double> lumpedOutside = Calculations.calcLumpedOutside(z0, zLRe, zLIm);
+
+    List<double> xA = [lumpedInside[0], lumpedInside[1]];
+    List<double> bA = [lumpedInside[2], lumpedInside[3]];
+    List<double> xB = [lumpedOutside[0], lumpedOutside[1]];
+    List<double> bB = [lumpedOutside[2], lumpedOutside[3]];
+
+    // save result
+    await SavedData.saveLumpedData(xA, bA, xB, bB);
+
     Navigator.pushNamed(context, '/results');
   }
 
@@ -81,6 +108,12 @@ class ButtonFuncs {
     // placeholder for single stub button logic
     await SavedData.setMatchingNetworkType('singlestub');
     debugPrint('Single Stub Matching Network Selected');
+
+    // get values
+
+    // calculate
+
+    // save result
 
     Navigator.pushNamed(context, '/results');
   }

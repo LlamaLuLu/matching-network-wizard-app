@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:complex/complex.dart';
+import 'package:flutter/material.dart';
 
 class Calculations {
   //----------------------- QUARTER WAVE TRANSFORMER ----------------------//
@@ -11,20 +12,22 @@ class Calculations {
 
   //------------------ LUMPED ELEMENT MATCHING NETWORK --------------------//
   static List<double> calcLumpedInside(double z0, double zLRe, double zLIm) {
-    List<double> bSeries = calcBSeries(z0, zLRe, zLIm);
-    List<double> xSeries = calcXSeries(bSeries, z0, zLRe, zLIm);
+    List<double> bSeries = calcBIn(z0, zLRe, zLIm);
+    List<double> xSeries = calcXIn(bSeries, z0, zLRe, zLIm);
+    debugPrint([xSeries[0], xSeries[1], bSeries[0], bSeries[1]].toString());
 
     return [xSeries[0], xSeries[1], bSeries[0], bSeries[1]];
   }
 
   static List<double> calcLumpedOutside(double z0, double zLRe, double zLIm) {
-    List<double> bShunt = calcBShunt(z0, zLRe);
-    List<double> xShunt = calcXShunt(z0, zLRe, zLIm);
+    List<double> bShunt = calcBOut(z0, zLRe);
+    List<double> xShunt = calcXOut(z0, zLRe, zLIm);
+    debugPrint([xShunt[0], xShunt[1], bShunt[0], bShunt[1]].toString());
 
     return [xShunt[0], xShunt[1], bShunt[0], bShunt[1]];
   }
 
-  static List<double> calcXSeries(
+  static List<double> calcXIn(
       List<double> bSeries, double z0, double zLRe, double zLIm) {
     if (zLRe == 0) {
       throw ArgumentError('zLRe cannot be zero to avoid division by zero.');
@@ -41,7 +44,7 @@ class Calculations {
     return xSeries;
   }
 
-  static List<double> calcBSeries(double z0, double zLRe, double zLIm) {
+  static List<double> calcBIn(double z0, double zLRe, double zLIm) {
     final term1 = sqrt(zLRe / z0);
     final term2 = sqrt(pow(zLRe, 2) + pow(zLIm, 2) - z0 * zLRe);
     final term3 = pow(zLRe, 2) + pow(zLIm, 2);
@@ -52,7 +55,7 @@ class Calculations {
     return [bA1, bA2];
   }
 
-  static List<double> calcXShunt(double z0, double zLRe, double zLIm) {
+  static List<double> calcXOut(double z0, double zLRe, double zLIm) {
     final term1 = sqrt(zLRe * (z0 - zLRe));
 
     final xB1 = term1 - zLIm;
@@ -61,7 +64,7 @@ class Calculations {
     return [xB1, xB2];
   }
 
-  static List<double> calcBShunt(double z0, double zLRe) {
+  static List<double> calcBOut(double z0, double zLRe) {
     final term1 = sqrt((z0 - zLRe) / zLRe);
 
     double bB1 = term1 / z0;

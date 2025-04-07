@@ -258,7 +258,11 @@ class AppWidgets {
             // if matchingNetworkType == 'quarterwave'
             // show: ZQWT
             if (matchingNetworkType == 'quarterwave')
-              buildParameterRow('ZQWT', '${calculatedData[0].toString()} Ω'),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: buildParameterRow(
+                    'ZQWT', '${calculatedData[0].toStringAsFixed(3)} Ω'),
+              ),
             if (matchingNetworkType == 'lumped')
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,13 +283,13 @@ class AppWidgets {
                     ),
                   ),
                   buildParameterRow('X1',
-                      '${calculatedData[0].toStringAsExponential(3)}${capOrInd('X', calculatedData[0])}'),
+                      '${calculatedData[4].toStringAsExponential(3)}${capOrInd('X', calculatedData[4])}'),
                   buildParameterRow('B1',
-                      '${calculatedData[2].toStringAsExponential(3)}${capOrInd('B', calculatedData[2])}'),
+                      '${calculatedData[6].toStringAsExponential(3)}${capOrInd('B', calculatedData[6])}'),
                   buildParameterRow('X2',
-                      '${calculatedData[1].toStringAsExponential(3)}${capOrInd('X', calculatedData[1])}'),
+                      '${calculatedData[5].toStringAsExponential(3)}${capOrInd('X', calculatedData[5])}'),
                   buildParameterRow('B2',
-                      '${calculatedData[3].toStringAsExponential(3)}${capOrInd('B', calculatedData[3])}'),
+                      '${calculatedData[7].toStringAsExponential(3)}${capOrInd('B', calculatedData[7])}'),
 
                   // shunt first
                   Padding(
@@ -300,13 +304,13 @@ class AppWidgets {
                     ),
                   ),
                   buildParameterRow('B1',
-                      '${calculatedData[6].toStringAsExponential(3)}${capOrInd('B', calculatedData[6])}'),
+                      '${calculatedData[2].toStringAsExponential(3)}${capOrInd('B', calculatedData[2])}'),
                   buildParameterRow('X1',
-                      '${calculatedData[4].toStringAsExponential(3)}${capOrInd('X', calculatedData[4])}'),
+                      '${calculatedData[0].toStringAsExponential(3)}${capOrInd('X', calculatedData[0])}'),
                   buildParameterRow('B2',
-                      '${calculatedData[7].toStringAsExponential(3)}${capOrInd('B', calculatedData[7])}'),
+                      '${calculatedData[3].toStringAsExponential(3)}${capOrInd('B', calculatedData[3])}'),
                   buildParameterRow('X2',
-                      '${calculatedData[5].toStringAsExponential(3)}${capOrInd('X', calculatedData[5])}'),
+                      '${calculatedData[1].toStringAsExponential(3)}${capOrInd('X', calculatedData[1])}'),
                 ],
               ),
             if (matchingNetworkType == 'singlestub')

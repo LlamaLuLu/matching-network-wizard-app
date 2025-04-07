@@ -103,8 +103,8 @@ class _ResultsPageState extends State<ResultsPage> {
     Complex zL = await SavedData.getZL();
     double f = await SavedData.getF();
     userInputs = [
-      z0.toString(),
-      '(${zL.real.toString()}) +\nj(${zL.imaginary.toString()})',
+      z0.toStringAsFixed(1),
+      '(${zL.real.toStringAsFixed(1)}) +\nj(${zL.imaginary.toStringAsFixed(1)})',
       f.toStringAsExponential(3)
     ];
     debugPrint('Retrieved User Inputs: $userInputs');
