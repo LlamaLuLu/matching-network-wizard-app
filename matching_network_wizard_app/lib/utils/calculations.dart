@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:complex/complex.dart';
 import 'package:flutter/material.dart';
+import 'package:matching_network_wizard_app/utils/app_widgets.dart';
 
 class Calculations {
   //----------------------- QUARTER WAVE TRANSFORMER ----------------------//
@@ -11,6 +12,74 @@ class Calculations {
   }
 
   //------------------ LUMPED ELEMENT MATCHING NETWORK --------------------//
+  static List<double> calcCapIndValues(
+      List<double> bList, List<double> xList, double z0, double f) {
+    final List<double> capIndValues = [];
+    for (int i = 0; i < bList.length; i++) {
+      double b = bList[i];
+      double x = xList[i];
+      double ci, ic;
+
+      String xType = AppWidgets.capOrInd('x', x);
+      String bType = AppWidgets.capOrInd('b', b);
+
+      if (xType == 'Capacitor') {
+        ci = calcCap(b, x, z0, f);
+      } else if (xType == 'Inductor') {
+        ci = calcInd(b, x, z0, f);
+      } else {
+        ci = 0;
+      }
+
+      if (bType == 'Capacitor') {
+        ic = calcCap(b, x, z0, f);
+      } else if (bType == 'Inductor') {
+        ic = calcInd(b, x, z0, f);
+      } else {
+        ic = 0;
+      }
+
+      capIndValues.add(ci);
+      capIndValues.add(ic);
+      debugPrint('ci: $ci, ic: $ic');
+    }
+    return capIndValues;
+  }
+
+  static double calcCap(double B, double X, double z0, double f) {
+    double c, term1, term2;
+    double b = B * z0;
+    double x = X / z0;
+
+    if (b > 0) {
+      term1 = 1 / (2 * pi * f);
+      term2 = b / z0;
+    } else {
+      term1 = -1 / (2 * pi * f);
+      term2 = 1 / (x * z0);
+    }
+    c = term1 * term2;
+
+    return c;
+  }
+
+  static double calcInd(double B, double X, double z0, double f) {
+    double l, term1, term2;
+    double b = B * z0;
+    double x = X / z0;
+
+    if (b > 0) {
+      term1 = 1 / (2 * pi * f);
+      term2 = x * z0;
+    } else {
+      term1 = -1 / (2 * pi * f);
+      term2 = z0 / b;
+    }
+    l = term1 * term2;
+
+    return l;
+  }
+
   static List<double> calcLumpedInside(double z0, double zLRe, double zLIm) {
     List<double> bSeries = calcBIn(z0, zLRe, zLIm);
     List<double> xSeries = calcXIn(bSeries, z0, zLRe, zLIm);
@@ -29,10 +98,6 @@ class Calculations {
 
   static List<double> calcXIn(
       List<double> bSeries, double z0, double zLRe, double zLIm) {
-    if (zLRe == 0) {
-      throw ArgumentError('zLRe cannot be zero to avoid division by zero.');
-    }
-
     final List<double> xSeries = [];
     for (final b in bSeries) {
       final term1 = 1 / b;

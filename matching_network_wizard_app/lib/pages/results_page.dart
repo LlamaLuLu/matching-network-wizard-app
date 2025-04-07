@@ -25,8 +25,9 @@ class _ResultsPageState extends State<ResultsPage> {
   int _currentIndex = 0;
   String matchingNetwork = '';
   bool autoMode = false;
-  List<String> userInputs = ['0', '0', '0'];
-  List<double> calculatedData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  List<double> userInputs = [0, 0, 0, 0];
+  List<double> calculatedData = [0, 0, 0, 0, 0, 0, 0, 0];
+  List<double> capIndValues = [0, 0, 0, 0, 0, 0, 0, 0];
 
   // Sample data for the impedance graph (replace with your actual data)
   final List<FlSpot> impedanceData = [
@@ -71,6 +72,19 @@ class _ResultsPageState extends State<ResultsPage> {
       debugPrint('XA: $xA, BA: $bA, XB: $xB, BB: $bB');
 
       calculatedData = [xA[0], xA[1], bA[0], bA[1], xB[0], xB[1], bB[0], bB[1]];
+
+      List<double> capIndValuesList = await SavedData.getCapIndValues();
+      capIndValues = [
+        capIndValuesList[0],
+        capIndValuesList[1],
+        capIndValuesList[2],
+        capIndValuesList[3],
+        capIndValuesList[4],
+        capIndValuesList[5],
+        capIndValuesList[6],
+        capIndValuesList[7],
+      ];
+      debugPrint('Capacitance and Inductance Values: $capIndValues');
     } else if (matchingNetworkType == 'singlestub') {
       matchingNetwork = 'Single Stub Tuning';
 
@@ -102,11 +116,7 @@ class _ResultsPageState extends State<ResultsPage> {
     double z0 = await SavedData.getZ0();
     Complex zL = await SavedData.getZL();
     double f = await SavedData.getF();
-    userInputs = [
-      z0.toStringAsFixed(1),
-      '(${zL.real.toStringAsFixed(1)}) +\nj(${zL.imaginary.toStringAsFixed(1)})',
-      f.toStringAsExponential(3)
-    ];
+    userInputs = [z0, zL.real, zL.imaginary, f];
     debugPrint('Retrieved User Inputs: $userInputs');
 
     setState(() {});
@@ -179,8 +189,13 @@ class _ResultsPageState extends State<ResultsPage> {
               Expanded(
                 child: CarouselSlider(
                   items: [
-                    AppWidgets.buildParametersCard(matchingNetworkType,
-                        matchingNetwork, autoMode, calculatedData, userInputs),
+                    AppWidgets.buildParametersCard(
+                        matchingNetworkType,
+                        matchingNetwork,
+                        autoMode,
+                        calculatedData,
+                        userInputs,
+                        capIndValues),
                     AppWidgets.buildCircuitDiagram(),
                     AppWidgets.buildImpedanceGraph(impedanceData),
                   ],

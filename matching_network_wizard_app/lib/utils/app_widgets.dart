@@ -77,6 +77,28 @@ class AppWidgets {
     );
   }
 
+  static Widget resultHeading2(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: AppTheme.text1,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  static Widget resultHeading3(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: AppTheme.text1,
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
   //--------------------- COMPONENTS ------------------------//
   static Widget networkTypeCard(
       String label, VoidCallback onPressed, Color fgColor, Color bgColor) {
@@ -198,24 +220,32 @@ class AppWidgets {
   // FOR CAROUSEL SLIDER:
 
   static String capOrInd(String param, double value) {
+    // if X pos -> inductor, if X neg -> capacitor
+    // if B pos -> capacitor, if B neg -> inductor
+
     // X
-    if (param == 'x' || param == 'X') {
-      if (value > 0) {
-        return ' H';
-      } else {
-        return ' F';
-      }
+    if ((param == 'x' || param == 'X') && (value > 0)) {
+      return 'Inductor';
+    } else if ((param == 'x' || param == 'X') && (value < 0)) {
+      return 'Capacitor';
     }
     // B
-    else if (param == 'b' || param == 'B') {
-      // B
-      if (value > 0) {
-        return ' F';
-      } else {
-        return ' H';
-      }
+    else if ((param == 'b' || param == 'B') && (value > 0)) {
+      return 'Capacitor';
+    } else if ((param == 'b' || param == 'B') && (value < 0)) {
+      return 'Inductor';
     } else {
-      return '';
+      return 'None';
+    }
+  }
+
+  static String capOrIndValue(double value, String capOrInd) {
+    if (capOrInd == 'Capacitor') {
+      return '${value.toStringAsExponential(3)} F';
+    } else if (capOrInd == 'Inductor') {
+      return '${value.toStringAsExponential(3)} H';
+    } else {
+      return 'NaN';
     }
   }
 
@@ -225,9 +255,10 @@ class AppWidgets {
       String matchingNetwork,
       bool autoMode,
       List<double> calculatedData,
-      List<String> userInputs) {
+      List<double> userInputs,
+      List<double> capIndValues) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 30),
+      padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 30),
       decoration: BoxDecoration(
         color: AppTheme.bg1,
         borderRadius: BorderRadius.circular(18),
@@ -261,58 +292,99 @@ class AppWidgets {
               Padding(
                 padding: const EdgeInsets.only(bottom: 20),
                 child: buildParameterRow(
-                    'ZQWT', '${calculatedData[0].toStringAsFixed(3)} Ω'),
+                    'ZQWT',
+                    (userInputs[2] != 0)
+                        ? 'Load not\npurely real'
+                        : '${calculatedData[0].toStringAsFixed(3)} Ω'),
               ),
             if (matchingNetworkType == 'lumped')
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // if X pos -> inductor, if X neg -> capacitor
-                  // if B pos -> capacitor, if B neg -> inductor
-
                   // series first
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
-                    child: Text(
-                      'Series First Solution',
-                      style: TextStyle(
-                        color: AppTheme.text1,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: resultHeading2('Series First Solution'),
                   ),
-                  buildParameterRow('X1',
-                      '${calculatedData[4].toStringAsExponential(3)}${capOrInd('X', calculatedData[4])}'),
-                  buildParameterRow('B1',
-                      '${calculatedData[6].toStringAsExponential(3)}${capOrInd('B', calculatedData[6])}'),
-                  buildParameterRow('X2',
-                      '${calculatedData[5].toStringAsExponential(3)}${capOrInd('X', calculatedData[5])}'),
-                  buildParameterRow('B2',
-                      '${calculatedData[7].toStringAsExponential(3)}${capOrInd('B', calculatedData[7])}'),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: resultHeading3('Design 1'),
+                  ),
+                  buildParameterRow(
+                      'X1', calculatedData[4].toStringAsExponential(3)),
+                  buildParameterRow(
+                      (capOrInd('X', calculatedData[4])),
+                      capOrIndValue(
+                          capIndValues[4], capOrInd('X', calculatedData[4]))),
+
+                  buildParameterRow(
+                      'B1', calculatedData[6].toStringAsExponential(3)),
+                  buildParameterRow(
+                      (capOrInd('b', calculatedData[6])),
+                      capOrIndValue(
+                          capIndValues[6], capOrInd('b', calculatedData[6]))),
+
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: resultHeading3('Design 2'),
+                  ),
+                  buildParameterRow(
+                      'X2', calculatedData[5].toStringAsExponential(3)),
+                  buildParameterRow(
+                      (capOrInd('X', calculatedData[5])),
+                      capOrIndValue(
+                          capIndValues[5], capOrInd('X', calculatedData[5]))),
+
+                  buildParameterRow(
+                      'B2', calculatedData[7].toStringAsExponential(3)),
+                  buildParameterRow(
+                      (capOrInd('b', calculatedData[7])),
+                      capOrIndValue(
+                          capIndValues[7], capOrInd('b', calculatedData[7]))),
 
                   // shunt first
                   Padding(
-                    padding: const EdgeInsets.only(top: 15, bottom: 5),
-                    child: Text(
-                      'Shunt First Solution',
-                      style: TextStyle(
-                        color: AppTheme.text1,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    padding: const EdgeInsets.only(top: 15, bottom: 8),
+                    child: resultHeading2('Shunt First Solution'),
                   ),
-                  buildParameterRow('B1',
-                      '${calculatedData[2].toStringAsExponential(3)}${capOrInd('B', calculatedData[2])}'),
-                  buildParameterRow('X1',
-                      '${calculatedData[0].toStringAsExponential(3)}${capOrInd('X', calculatedData[0])}'),
-                  buildParameterRow('B2',
-                      '${calculatedData[3].toStringAsExponential(3)}${capOrInd('B', calculatedData[3])}'),
-                  buildParameterRow('X2',
-                      '${calculatedData[1].toStringAsExponential(3)}${capOrInd('X', calculatedData[1])}'),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: resultHeading3('Design 1'),
+                  ),
+                  buildParameterRow(
+                      'B1', calculatedData[2].toStringAsExponential(3)),
+                  buildParameterRow(
+                      (capOrInd('b', calculatedData[2])),
+                      capOrIndValue(
+                          capIndValues[2], capOrInd('b', calculatedData[2]))),
+
+                  buildParameterRow(
+                      'X1', calculatedData[0].toStringAsExponential(3)),
+                  buildParameterRow(
+                      (capOrInd('X', calculatedData[0])),
+                      capOrIndValue(
+                          capIndValues[0], capOrInd('X', calculatedData[0]))),
+
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: resultHeading3('Design 2'),
+                  ),
+                  buildParameterRow(
+                      'B2', calculatedData[3].toStringAsExponential(3)),
+                  buildParameterRow(
+                      (capOrInd('b', calculatedData[3])),
+                      capOrIndValue(
+                          capIndValues[3], capOrInd('b', calculatedData[3]))),
+
+                  buildParameterRow(
+                      'X2', calculatedData[1].toStringAsExponential(3)),
+                  buildParameterRow(
+                      (capOrInd('X', calculatedData[1])),
+                      capOrIndValue(
+                          capIndValues[1], capOrInd('X', calculatedData[1]))),
                 ],
               ),
+
             if (matchingNetworkType == 'singlestub')
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,19 +439,14 @@ class AppWidgets {
 
             Padding(
               padding: const EdgeInsets.only(top: 20, bottom: 10),
-              child: Text(
-                'Your Inputs:',
-                style: TextStyle(
-                  color: AppTheme.text1,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              child: resultHeading2('Your Inputs:'),
             ),
             // show user inputs: Z0, ZL, f
-            buildParameterRow('Z0', '${userInputs[0]} Ω'),
-            buildParameterRow('ZL', '${userInputs[1]} Ω'),
-            buildParameterRow('Frequency', '${userInputs[2]} Hz'),
+            buildParameterRow('Z0', '${userInputs[0].toStringAsFixed(1)} Ω'),
+            buildParameterRow('ZL',
+                '(${userInputs[1].toStringAsFixed(1)}) +\nj(${userInputs[2].toStringAsFixed(1)}) Ω'),
+            buildParameterRow(
+                'Frequency', '${userInputs[3].toStringAsExponential(3)} Hz'),
           ],
         ),
       ),

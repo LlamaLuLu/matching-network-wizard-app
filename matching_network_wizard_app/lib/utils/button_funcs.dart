@@ -89,6 +89,7 @@ class ButtonFuncs {
     Complex zL = await SavedData.getZL();
     double zLRe = zL.real;
     double zLIm = zL.imaginary;
+    double f = await SavedData.getF();
     // calculate
     List<double> lumpedInside = Calculations.calcLumpedInside(z0, zLRe, zLIm);
     List<double> lumpedOutside = Calculations.calcLumpedOutside(z0, zLRe, zLIm);
@@ -98,8 +99,16 @@ class ButtonFuncs {
     List<double> xB = [lumpedOutside[0], lumpedOutside[1]];
     List<double> bB = [lumpedOutside[2], lumpedOutside[3]];
 
+    // join all x & b
+    List<double> xList = [...xA, ...xB];
+    List<double> bList = [...bA, ...bB];
+    // calc cap & ind values
+    List<double> capIndValues =
+        Calculations.calcCapIndValues(bList, xList, z0, f);
+
     // save result
     await SavedData.saveLumpedData(xA, bA, xB, bB);
+    await SavedData.saveCapIndValues(capIndValues);
 
     Navigator.pushNamed(context, '/results');
   }

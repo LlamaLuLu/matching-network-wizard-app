@@ -39,12 +39,20 @@ class SavedData {
   static const String xA2 = 'xA2';
   static const String bA1 = 'bA1';
   static const String bA2 = 'bA2';
+  static const String ciA1 = 'ciA1';
+  static const String ciA2 = 'ciA2';
+  static const String icA1 = 'icA1';
+  static const String icA2 = 'icA2';
 
   // B: outside solution (RL < Z0)
   static const String xB1 = 'xB1';
   static const String xB2 = 'xB2';
   static const String bB1 = 'bB1';
   static const String bB2 = 'bB2';
+  static const String ciB1 = 'ciB1';
+  static const String ciB2 = 'ciB2';
+  static const String icB1 = 'icB1';
+  static const String icB2 = 'icB2';
 
   // SINGLE STUB MATCHING NETWORK:
   static const String t1 = 't1';
@@ -124,6 +132,29 @@ class SavedData {
   /*
     SETTERS & GETTERS:
   */
+
+  // cap & ind values
+  static Future<void> saveCapIndValues(List<double> capIndList) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(ciA1, capIndList[0]);
+    await prefs.setDouble(icA1, capIndList[1]);
+    await prefs.setDouble(ciA2, capIndList[2]);
+    await prefs.setDouble(icA2, capIndList[3]);
+    await prefs.setDouble(ciB1, capIndList[4]);
+    await prefs.setDouble(icB1, capIndList[5]);
+    await prefs.setDouble(ciB2, capIndList[6]);
+    await prefs.setDouble(icB2, capIndList[7]);
+  }
+
+  static Future<List<double>> getCapIndValues() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<double> capIndList = [];
+    capIndList.addAll(await getCIA());
+    capIndList.addAll(await getICA());
+    capIndList.addAll(await getCIB());
+    capIndList.addAll(await getICB());
+    return capIndList;
+  }
 
   // zL
   static Future<void> setZL(Complex zL) async {
@@ -226,6 +257,36 @@ class SavedData {
     ]; // Default value if not set
   }
 
+  // cA
+  static Future<void> setCIA(List<double> cA) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(ciA1, cA[0]);
+    await prefs.setDouble(ciA2, cA[1]);
+  }
+
+  static Future<List<double>> getCIA() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return [
+      prefs.getDouble(ciA1) ?? 0.0,
+      prefs.getDouble(ciA2) ?? 0.0
+    ]; // Default value if not set
+  }
+
+  // iA
+  static Future<void> setICA(List<double> iA) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(icA1, iA[0]);
+    await prefs.setDouble(icA2, iA[1]);
+  }
+
+  static Future<List<double>> getICA() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return [
+      prefs.getDouble(icA1) ?? 0.0,
+      prefs.getDouble(icA2) ?? 0.0
+    ]; // Default value if not set
+  }
+
   // xB
   static Future<void> setXB(List<double> xB) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -253,6 +314,36 @@ class SavedData {
     return [
       prefs.getDouble(bB1) ?? 0.0,
       prefs.getDouble(bB2) ?? 0.0
+    ]; // Default value if not set
+  }
+
+  // cB
+  static Future<void> setCIB(List<double> cB) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(ciB1, cB[0]);
+    await prefs.setDouble(ciB2, cB[1]);
+  }
+
+  static Future<List<double>> getCIB() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return [
+      prefs.getDouble(ciB1) ?? 0.0,
+      prefs.getDouble(ciB2) ?? 0.0
+    ]; // Default value if not set
+  }
+
+  // iB
+  static Future<void> setICB(List<double> iB) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(icB1, iB[0]);
+    await prefs.setDouble(icB2, iB[1]);
+  }
+
+  static Future<List<double>> getICB() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return [
+      prefs.getDouble(icB1) ?? 0.0,
+      prefs.getDouble(icB2) ?? 0.0
     ]; // Default value if not set
   }
 
