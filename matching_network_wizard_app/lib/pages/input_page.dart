@@ -25,57 +25,60 @@ class _InputPageState extends State<InputPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                children: [
-                  // back arrow button
-                  Padding(
-                    padding: const EdgeInsets.only(left: 11),
-                    child: AppWidgets.backButton(context),
-                  ),
-
-                  // heading: Input Parameters
-                  Padding(
-                    padding: const EdgeInsets.only(top: 35, bottom: 35),
-                    child: AppWidgets.headingText(
-                        'Input Parameters', AppTheme.text2),
-                  ),
-
-                  // input fields
-                  Column(
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
                     children: [
-                      AppWidgets.textField(
-                          hasSubscript: true,
-                          label: 'Z',
-                          controller: z0Controller,
-                          subscript: '0',
-                          hintText: 'Characteristic Impedance (50 \u03A9)'),
-                      AppWidgets.textField(
-                          hasSubscript: true,
-                          label: 'Z',
-                          controller: zLReController,
-                          subscript: 'L ',
-                          hintText: 'REAL Load Impedance'),
-                      AppWidgets.textField(
-                          hasSubscript: true,
-                          label: 'Z',
-                          controller: zLImController,
-                          subscript: 'L ',
-                          hintText: 'IMAGINARY Load Impedance'),
-                      AppWidgets.textField(
-                        label: 'f   ',
-                        controller: fController,
-                        hintText: 'Frequency (MHz)',
+                      // back arrow button
+                      Padding(
+                        padding: const EdgeInsets.only(left: 11),
+                        child: AppWidgets.backButton(context),
+                      ),
+
+                      // heading: Input Parameters
+                      Padding(
+                        padding: const EdgeInsets.only(top: 35, bottom: 35),
+                        child: AppWidgets.headingText(
+                            'Input Parameters', AppTheme.text2),
+                      ),
+
+                      // input fields
+                      Column(
+                        children: [
+                          AppWidgets.textField(
+                              hasSubscript: true,
+                              label: 'Z',
+                              controller: z0Controller,
+                              subscript: '0',
+                              hintText: 'Characteristic Impedance (50 \u03A9)'),
+                          AppWidgets.textField(
+                              hasSubscript: true,
+                              label: 'Z',
+                              controller: zLReController,
+                              subscript: 'L ',
+                              hintText: 'REAL Load Impedance'),
+                          AppWidgets.textField(
+                              hasSubscript: true,
+                              label: 'Z',
+                              controller: zLImController,
+                              subscript: 'L ',
+                              hintText: 'IMAGINARY Load Impedance'),
+                          AppWidgets.textField(
+                            label: 'f   ',
+                            controller: fController,
+                            hintText: 'Frequency (MHz)',
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
 
               // next button
               Padding(
-                padding: const EdgeInsets.only(bottom: 90),
+                padding: const EdgeInsets.only(bottom: 80),
                 child: AppWidgets.pinkButton(
                     'Next',
                     () => ButtonFuncs.nextBtnInputs(

@@ -1,5 +1,7 @@
 import 'package:complex/complex.dart';
 import 'package:flutter/material.dart';
+import 'package:matching_network_wizard_app/models/impedance_point.dart';
+import 'package:matching_network_wizard_app/models/matching_networks.dart';
 import 'package:matching_network_wizard_app/utils/app_theme.dart';
 import 'package:matching_network_wizard_app/utils/app_widgets.dart';
 import 'package:matching_network_wizard_app/utils/button_funcs.dart';
@@ -7,6 +9,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:matching_network_wizard_app/utils/calculations.dart';
 import 'package:matching_network_wizard_app/utils/saved_data.dart';
+import 'package:matching_network_wizard_app/models/impedance_graph.dart';
 
 class ResultsPage extends StatefulWidget {
   const ResultsPage({super.key});
@@ -30,16 +33,12 @@ class _ResultsPageState extends State<ResultsPage> {
   List<double> calculatedData = [0, 0, 0, 0, 0, 0, 0, 0];
   List<double> capIndValues = [0, 0, 0, 0, 0, 0, 0, 0];
 
-  // Sample data for the impedance graph (replace with your actual data)
-  final List<FlSpot> impedanceData = [
-    FlSpot(1, 2.5),
-    FlSpot(2, 3.1),
-    FlSpot(3, 4.0),
-    FlSpot(4, 3.8),
-    FlSpot(5, 3.5),
-    FlSpot(6, 4.2),
-    FlSpot(7, 5.1),
-  ];
+  // for quarterwave
+  List<ImpedancePoint> quarterWavePts = [];
+  List<FlSpot> flSpots = [];
+  // for lumped
+  List<FlSpot> lumpedSeriesPts = [];
+  List<FlSpot> lumpedShuntPts = [];
 
   @override
   void initState() {
@@ -121,6 +120,29 @@ class _ResultsPageState extends State<ResultsPage> {
       matchingNetwork = 'Auto-Matching Wizard';
     }
 
+    quarterWavePts = computeQuarterWaveSweep(
+      ZL: zL,
+      Z0: z0,
+      f0MHz: f,
+    );
+    flSpots = ImpedanceGraph.impedancePointsToFlSpots(quarterWavePts,
+        mode: 'magnitude');
+
+    lumpedSeriesPts = ImpedanceGraph.generateLumpedElementImpedanceGraph(
+      zlReal: zL.real,
+      zlImag: zL.imaginary,
+      z0: z0,
+      f0MHz: f,
+      seriesFirst: true,
+    );
+    lumpedShuntPts = ImpedanceGraph.generateLumpedElementImpedanceGraph(
+      zlReal: zL.real,
+      zlImag: zL.imaginary,
+      z0: z0,
+      f0MHz: f,
+      seriesFirst: false, // <- switch to shunt-first
+    );
+
     setState(() {});
   }
 
@@ -200,7 +222,13 @@ class _ResultsPageState extends State<ResultsPage> {
                         capIndValues),
                     AppWidgets.buildCircuitDiagram(
                         matchingNetwork, matchingNetworkType),
-                    AppWidgets.buildImpedanceGraph(impedanceData),
+                    if (matchingNetworkType == 'quarterwave')
+                      AppWidgets.buildImpedanceGraph(flSpots),
+                    if (matchingNetworkType == 'lumped')
+                      // want to add series & shunt graphs here
+                      // AppWidgets.buildImpedanceGraph(lumpedSeriesPts),
+                      if (matchingNetworkType == 'singlestub')
+                        AppWidgets.buildImpedanceGraph(flSpots),
                   ],
                   options: CarouselOptions(
                     height: double.infinity,

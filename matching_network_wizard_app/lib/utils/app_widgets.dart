@@ -11,7 +11,8 @@ class AppWidgets {
       child: IconButton(
         icon: const Icon(Icons.arrow_back),
         color: AppTheme.text2,
-        onPressed: () {
+        onPressed: () async {
+          await SavedData.setAutoMode(false);
           Navigator.pop(context);
         },
       ),
@@ -285,7 +286,11 @@ class AppWidgets {
             ),
             const SizedBox(height: 15),
             // show network type only if on 'auto'
-            //if (autoMode) buildParameterRow('Network Type', matchingNetwork),
+            if (autoMode)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: buildParameterRow('Best Solution', matchingNetwork),
+              ),
             // if matchingNetworkType == 'quarterwave'
             // show: ZQWT
             if (matchingNetworkType == 'quarterwave')
@@ -563,6 +568,23 @@ class AppWidgets {
   }
 
   static Widget buildImpedanceGraph(List<FlSpot> impedanceData) {
+    const double paddingX = 0.1; // MHz
+    const double paddingY = 1.0; // Ohms
+
+    double minX = impedanceData.first.x - paddingX;
+    double maxX = impedanceData.last.x + paddingX;
+
+    double minY =
+        impedanceData.map((e) => e.y).reduce((a, b) => a < b ? a : b) -
+            paddingY;
+    double maxY =
+        impedanceData.map((e) => e.y).reduce((a, b) => a > b ? a : b) +
+            paddingY;
+
+    // Clamp minY to zero (in case it's negative)
+    minY = minY.clamp(0.0, double.infinity);
+    maxY = maxY.clamp(0.0, double.infinity);
+
     return Container(
       padding: const EdgeInsets.only(top: 20, left: 8, right: 8),
       decoration: BoxDecoration(
@@ -625,7 +647,7 @@ class AppWidgets {
                     ),
                     bottomTitles: AxisTitles(
                       axisNameWidget: Text(
-                        'Frequency (GHz)',
+                        'Frequency (MHz)',
                         style: TextStyle(
                           color: AppTheme.text1,
                           fontSize: 12,
@@ -675,10 +697,10 @@ class AppWidgets {
                     border:
                         Border.all(color: AppTheme.bg2.withValues(alpha: 0.5)),
                   ),
-                  minX: 1,
-                  maxX: 7,
-                  minY: 0,
-                  maxY: 6,
+                  minX: minX,
+                  maxX: maxX,
+                  minY: minY,
+                  maxY: maxY,
                   lineBarsData: [
                     LineChartBarData(
                       spots: impedanceData,
