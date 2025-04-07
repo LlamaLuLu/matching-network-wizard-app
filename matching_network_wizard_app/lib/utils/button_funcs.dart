@@ -41,8 +41,26 @@ class ButtonFuncs {
     Navigator.pushNamed(context, '/selection');
   }
 
-  static void pcbBtn(BuildContext context) {
+  static void pcbInputsBtn(
+      BuildContext context,
+      TextEditingController wController,
+      TextEditingController hController,
+      TextEditingController epsilonRController) async {
+    double w = double.tryParse(wController.text) ?? 0.0;
+    w *= pow(10, -3);
+    double h = double.tryParse(hController.text) ?? 0.0;
+    h *= pow(10, -3);
+    double epsilonR = double.tryParse(epsilonRController.text) ??
+        4.5; // default for relative permittivity
+    debugPrint('Processed PCB Inputs: \nw: $w, h: $h, epsilonR: $epsilonR');
+
+    await SavedData.savePCBInputsData(w, h, epsilonR);
+
     Navigator.pushNamed(context, '/pcb');
+  }
+
+  static void pcbBtn(BuildContext context) {
+    Navigator.pushNamed(context, '/pcb_inputs');
   }
 
   static void regenBtn(BuildContext context) async {

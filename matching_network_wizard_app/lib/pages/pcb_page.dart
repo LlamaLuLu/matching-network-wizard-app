@@ -29,7 +29,7 @@ class _PcbPageState extends State<PcbPage> {
 
                   // heading: PCB Design
                   Padding(
-                    padding: const EdgeInsets.only(top: 20, bottom: 25),
+                    padding: const EdgeInsets.only(top: 30, bottom: 30),
                     child: AppWidgets.headingText('PCB Design', AppTheme.text2),
                   ),
                 ],

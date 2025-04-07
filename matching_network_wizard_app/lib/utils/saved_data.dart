@@ -23,6 +23,11 @@ class SavedData {
   static const String matchingNetworkTypeKey = 'matchingNetworkType';
   static const String autoModeKey = 'autoMode';
 
+  // pcb
+  static const String widthKey = 'width';
+  static const String heightKey = 'height';
+  static const String epsilonRKey = 'epsilonR';
+
   /*
     CALCULATED RESULTS:
   */
@@ -129,9 +134,51 @@ class SavedData {
     await setBB(bB);
   }
 
+  static Future<void> savePCBInputsData(
+      double w, double h, double epsilonR) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await setWidth(w);
+    await setHeight(h);
+    await setEpsilonR(epsilonR);
+  }
+
   /*
     SETTERS & GETTERS:
   */
+
+  // FOR PCB:
+  // width
+  static Future<void> setWidth(double width) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(widthKey, width);
+  }
+
+  static Future<double> getWidth() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(widthKey) ?? 0.0; // Default value if not set
+  }
+
+  // height
+  static Future<void> setHeight(double height) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(heightKey, height);
+  }
+
+  static Future<double> getHeight() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(heightKey) ?? 0.0; // Default value if not set
+  }
+
+  // epsilonR
+  static Future<void> setEpsilonR(double epsilonR) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(epsilonRKey, epsilonR);
+  }
+
+  static Future<double> getEpsilonR() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(epsilonRKey) ?? 0.0; // Default value if not set
+  }
 
   // cap & ind values
   static Future<void> saveCapIndValues(List<double> capIndList) async {

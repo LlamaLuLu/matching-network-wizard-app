@@ -567,26 +567,38 @@ class AppWidgets {
     );
   }
 
-  static Widget buildImpedanceGraph(List<FlSpot> impedanceData) {
+  static Widget buildImpedanceGraph(List<FlSpot> impedanceData,
+      {List<FlSpot>? secondaryData, double? userFrequency}) {
     const double paddingX = 0.1; // MHz
     const double paddingY = 1.0; // Ohms
 
-    double minX = impedanceData.first.x - paddingX;
-    double maxX = impedanceData.last.x + paddingX;
+    // Combine datasets for calculating bounds
+    List<FlSpot> allData = [...impedanceData];
+    if (secondaryData != null && secondaryData.isNotEmpty) {
+      allData.addAll(secondaryData);
+    }
 
+    // Calculate data bounds with padding
+    double minX =
+        allData.map((e) => e.x).reduce((a, b) => a < b ? a : b) - paddingX;
+    double maxX =
+        allData.map((e) => e.x).reduce((a, b) => a > b ? a : b) + paddingX;
     double minY =
-        impedanceData.map((e) => e.y).reduce((a, b) => a < b ? a : b) -
-            paddingY;
+        (allData.map((e) => e.y).reduce((a, b) => a < b ? a : b) - paddingY)
+            .clamp(0.0, double.infinity);
     double maxY =
-        impedanceData.map((e) => e.y).reduce((a, b) => a > b ? a : b) +
-            paddingY;
+        allData.map((e) => e.y).reduce((a, b) => a > b ? a : b) + paddingY;
 
-    // Clamp minY to zero (in case it's negative)
-    minY = minY.clamp(0.0, double.infinity);
-    maxY = maxY.clamp(0.0, double.infinity);
+    // Calculate appropriate intervals - FIXED: Use fewer intervals to prevent overlapping
+    double xRange = maxX - minX;
+    // Reduce number of x-axis labels to prevent overlapping
+    double xInterval = (xRange / 4).roundToDouble().clamp(1, double.infinity);
+
+    double yRange = maxY - minY;
+    double yInterval = (yRange / 5).roundToDouble().clamp(1, double.infinity);
 
     return Container(
-      padding: const EdgeInsets.only(top: 20, left: 8, right: 8),
+      padding: const EdgeInsets.only(top: 25, left: 3, right: 8),
       decoration: BoxDecoration(
         color: AppTheme.bg1,
         borderRadius: BorderRadius.circular(18),
@@ -620,78 +632,9 @@ class AppWidgets {
               ),
               child: LineChart(
                 LineChartData(
-                  gridData: FlGridData(
-                    show: true,
-                    horizontalInterval: 1,
-                    drawVerticalLine: true,
-                    getDrawingHorizontalLine: (value) {
-                      return FlLine(
-                        color: AppTheme.bg2.withValues(alpha: 0.3),
-                        strokeWidth: 1,
-                      );
-                    },
-                    getDrawingVerticalLine: (value) {
-                      return FlLine(
-                        color: AppTheme.bg2.withValues(alpha: 0.3),
-                        strokeWidth: 1,
-                      );
-                    },
-                  ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    bottomTitles: AxisTitles(
-                      axisNameWidget: Text(
-                        'Frequency (MHz)',
-                        style: TextStyle(
-                          color: AppTheme.text1,
-                          fontSize: 12,
-                        ),
-                      ),
-                      axisNameSize: 24,
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            '${value.toInt()}',
-                            style: TextStyle(
-                              color: AppTheme.text1,
-                              fontSize: 12,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      axisNameWidget: Text(
-                        'Impedance (Ω)',
-                        style: TextStyle(
-                          color: AppTheme.text1,
-                          fontSize: 12,
-                        ),
-                      ),
-                      axisNameSize: 24,
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            '${value.toInt()}',
-                            style: TextStyle(
-                              color: AppTheme.text1,
-                              fontSize: 12,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
+                  gridData: _buildGridData(xInterval, yInterval, userFrequency),
+                  titlesData: _buildTitlesData(minX, maxX, minY, maxY,
+                      xInterval, yInterval, userFrequency),
                   borderData: FlBorderData(
                     show: true,
                     border:
@@ -701,26 +644,437 @@ class AppWidgets {
                   maxX: maxX,
                   minY: minY,
                   maxY: maxY,
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: impedanceData,
-                      isCurved: true,
-                      color: AppTheme.bg3,
-                      barWidth: 3,
-                      isStrokeCapRound: true,
-                      dotData: FlDotData(show: true),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: AppTheme.bg3.withValues(alpha: 0.2),
-                      ),
-                    ),
-                  ],
+                  lineTouchData: LineTouchData(enabled: true),
+                  lineBarsData: _buildLineBarsData(
+                      impedanceData, secondaryData, userFrequency),
+                  extraLinesData: _buildExtraLinesData(userFrequency),
                 ),
               ),
+            ),
+          ),
+          // Legend for multiple data series
+          if (secondaryData != null && secondaryData.isNotEmpty)
+            _buildSeriesLegend(),
+          // Legend for user frequency
+          if (userFrequency != null) _buildFrequencyLegend(userFrequency),
+        ],
+      ),
+    );
+  }
+
+// Helper method for grid data
+  static FlGridData _buildGridData(
+      double xInterval, double yInterval, double? userFrequency) {
+    return FlGridData(
+      show: true,
+      horizontalInterval: yInterval,
+      verticalInterval: xInterval,
+      drawVerticalLine: true,
+      getDrawingHorizontalLine: (value) {
+        return FlLine(
+          color: AppTheme.bg2.withValues(alpha: 0.3),
+          strokeWidth: 1,
+        );
+      },
+      getDrawingVerticalLine: (value) {
+        // Highlight the user frequency with a different color if provided
+        if (userFrequency != null && (value - userFrequency).abs() < 0.01) {
+          return FlLine(
+            color: Colors.orangeAccent.withOpacity(0.7),
+            strokeWidth: 2,
+            dashArray: [5, 5],
+          );
+        }
+        return FlLine(
+          color: AppTheme.bg2.withValues(alpha: 0.3),
+          strokeWidth: 1,
+        );
+      },
+    );
+  }
+
+// Helper method for titles data
+  static FlTitlesData _buildTitlesData(double minX, double maxX, double minY,
+      double maxY, double xInterval, double yInterval, double? userFrequency) {
+    return FlTitlesData(
+      show: true,
+      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+      bottomTitles: AxisTitles(
+        axisNameWidget: Text(
+          'Frequency (MHz)',
+          style: TextStyle(color: AppTheme.text1, fontSize: 12),
+        ),
+        axisNameSize: 24,
+        sideTitles: SideTitles(
+          showTitles: true,
+          reservedSize: 30,
+          interval: xInterval,
+          getTitlesWidget: (value, meta) {
+            // FIXED: Skip more labels to prevent overlapping
+            // Only show labels at multiples of the interval to prevent overcrowding
+            if (value < minX ||
+                value > maxX ||
+                (value % (xInterval * 1.5) > 0.01 && value != userFrequency)) {
+              return const SizedBox.shrink();
+            }
+
+            bool isUserFreq =
+                userFrequency != null && (value - userFrequency).abs() < 0.01;
+            return Text(
+              value.toStringAsFixed(1),
+              style: TextStyle(
+                color: isUserFreq ? Colors.orangeAccent : AppTheme.text1,
+                fontSize: 12,
+                fontWeight: isUserFreq ? FontWeight.bold : FontWeight.normal,
+              ),
+            );
+          },
+        ),
+      ),
+      leftTitles: AxisTitles(
+        axisNameWidget: Text(
+          'Impedance (Ω)',
+          style: TextStyle(color: AppTheme.text1, fontSize: 12),
+        ),
+        axisNameSize: 24,
+        sideTitles: SideTitles(
+          showTitles: true,
+          reservedSize: 30,
+          interval: yInterval,
+          getTitlesWidget: (value, meta) {
+            if (value < minY || value > maxY) {
+              return const SizedBox.shrink();
+            }
+            return Text(
+              value.toInt().toString(),
+              style: TextStyle(color: AppTheme.text1, fontSize: 12),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+// Helper method for line bars data
+  static List<LineChartBarData> _buildLineBarsData(List<FlSpot> impedanceData,
+      List<FlSpot>? secondaryData, double? userFrequency) {
+    List<LineChartBarData> result = [
+      LineChartBarData(
+        spots: impedanceData,
+        isCurved: true,
+        color: AppTheme.bg3,
+        barWidth: 3,
+        isStrokeCapRound: true,
+        dotData: FlDotData(
+          show: true,
+          checkToShowDot: (spot, barData) {
+            if (userFrequency == null) return false;
+            return (spot.x - userFrequency).abs() < 0.01;
+          },
+          getDotPainter: (spot, percent, barData, index) {
+            return FlDotCirclePainter(
+              radius: 5,
+              color: Colors.orangeAccent,
+              strokeWidth: 2,
+              strokeColor: Colors.white,
+            );
+          },
+        ),
+        belowBarData: BarAreaData(
+          show: true,
+          color: AppTheme.bg3.withValues(alpha: 0.2),
+        ),
+      ),
+    ];
+
+    if (secondaryData != null && secondaryData.isNotEmpty) {
+      result.add(
+        LineChartBarData(
+          spots: secondaryData,
+          isCurved: true,
+          color: Colors.redAccent,
+          barWidth: 3,
+          isStrokeCapRound: true,
+          dotData: FlDotData(
+            show: true,
+            checkToShowDot: (spot, barData) {
+              if (userFrequency == null) return false;
+              return (spot.x - userFrequency).abs() < 0.01;
+            },
+            getDotPainter: (spot, percent, barData, index) {
+              return FlDotCirclePainter(
+                radius: 5,
+                color: Colors.orangeAccent,
+                strokeWidth: 2,
+                strokeColor: Colors.white,
+              );
+            },
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            color: Colors.redAccent.withOpacity(0.2),
+          ),
+        ),
+      );
+    }
+
+    return result;
+  }
+
+// Helper method for extra lines data
+  static ExtraLinesData? _buildExtraLinesData(double? userFrequency) {
+    if (userFrequency == null) return null;
+
+    return ExtraLinesData(
+      verticalLines: [
+        VerticalLine(
+          x: userFrequency,
+          color: Colors.orangeAccent.withOpacity(0.7),
+          strokeWidth: 2,
+          dashArray: [5, 5],
+          label: VerticalLineLabel(
+            show: true,
+            alignment: Alignment.topCenter,
+            padding: const EdgeInsets.only(bottom: 8),
+            style: const TextStyle(
+              color: Colors.orangeAccent,
+              fontWeight: FontWeight.bold,
+            ),
+            labelResolver: (line) => '${userFrequency.toStringAsFixed(2)} MHz',
+          ),
+        ),
+      ],
+    );
+  }
+
+// Helper method for series legend
+  static Widget _buildSeriesLegend() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 16,
+                height: 4,
+                color: AppTheme.bg3,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Series First',
+                style: TextStyle(
+                  color: AppTheme.text1,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 24),
+          Row(
+            children: [
+              Container(
+                width: 16,
+                height: 4,
+                color: Colors.redAccent,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Shunt First',
+                style: TextStyle(
+                  color: AppTheme.text1,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+// Helper method for frequency legend
+  static Widget _buildFrequencyLegend(double userFrequency) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 16,
+            height: 4,
+            color: Colors.orangeAccent,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            'Selected: ${userFrequency.toStringAsFixed(2)} MHz',
+            style: const TextStyle(
+              color: Colors.orangeAccent,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
       ),
     );
   }
+
+  // static Widget buildImpedanceGraph(List<FlSpot> impedanceData) {
+  //   const double paddingX = 0.1; // MHz
+  //   const double paddingY = 1.0; // Ohms
+
+  //   double minX = impedanceData.first.x - paddingX;
+  //   double maxX = impedanceData.last.x + paddingX;
+
+  //   double minY =
+  //       impedanceData.map((e) => e.y).reduce((a, b) => a < b ? a : b) -
+  //           paddingY;
+  //   double maxY =
+  //       impedanceData.map((e) => e.y).reduce((a, b) => a > b ? a : b) +
+  //           paddingY;
+
+  //   // Clamp minY to zero (in case it's negative)
+  //   minY = minY.clamp(0.0, double.infinity);
+  //   maxY = maxY.clamp(0.0, double.infinity);
+
+  //   return Container(
+  //     padding: const EdgeInsets.only(top: 20, left: 8, right: 8),
+  //     decoration: BoxDecoration(
+  //       color: AppTheme.bg1,
+  //       borderRadius: BorderRadius.circular(18),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withValues(alpha: 0.1),
+  //           blurRadius: 8,
+  //           offset: const Offset(0, 3),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.center,
+  //       children: [
+  //         Text(
+  //           'Impedance vs Frequency',
+  //           style: TextStyle(
+  //             color: AppTheme.text1,
+  //             fontSize: 18,
+  //             fontWeight: FontWeight.bold,
+  //           ),
+  //         ),
+  //         const SizedBox(height: 24),
+  //         Expanded(
+  //           child: Padding(
+  //             padding: const EdgeInsets.only(
+  //               right: 16.0,
+  //               left: 8.0,
+  //               top: 8.0,
+  //               bottom: 20.0,
+  //             ),
+  //             child: LineChart(
+  //               LineChartData(
+  //                 gridData: FlGridData(
+  //                   show: true,
+  //                   horizontalInterval: 1,
+  //                   drawVerticalLine: true,
+  //                   getDrawingHorizontalLine: (value) {
+  //                     return FlLine(
+  //                       color: AppTheme.bg2.withValues(alpha: 0.3),
+  //                       strokeWidth: 1,
+  //                     );
+  //                   },
+  //                   getDrawingVerticalLine: (value) {
+  //                     return FlLine(
+  //                       color: AppTheme.bg2.withValues(alpha: 0.3),
+  //                       strokeWidth: 1,
+  //                     );
+  //                   },
+  //                 ),
+  //                 titlesData: FlTitlesData(
+  //                   show: true,
+  //                   rightTitles: AxisTitles(
+  //                     sideTitles: SideTitles(showTitles: false),
+  //                   ),
+  //                   topTitles: AxisTitles(
+  //                     sideTitles: SideTitles(showTitles: false),
+  //                   ),
+  //                   bottomTitles: AxisTitles(
+  //                     axisNameWidget: Text(
+  //                       'Frequency (MHz)',
+  //                       style: TextStyle(
+  //                         color: AppTheme.text1,
+  //                         fontSize: 12,
+  //                       ),
+  //                     ),
+  //                     axisNameSize: 24,
+  //                     sideTitles: SideTitles(
+  //                       showTitles: true,
+  //                       reservedSize: 30,
+  //                       getTitlesWidget: (value, meta) {
+  //                         return Text(
+  //                           '${value.toInt()}',
+  //                           style: TextStyle(
+  //                             color: AppTheme.text1,
+  //                             fontSize: 12,
+  //                           ),
+  //                         );
+  //                       },
+  //                     ),
+  //                   ),
+  //                   leftTitles: AxisTitles(
+  //                     axisNameWidget: Text(
+  //                       'Impedance (Ω)',
+  //                       style: TextStyle(
+  //                         color: AppTheme.text1,
+  //                         fontSize: 12,
+  //                       ),
+  //                     ),
+  //                     axisNameSize: 24,
+  //                     sideTitles: SideTitles(
+  //                       showTitles: true,
+  //                       reservedSize: 30,
+  //                       getTitlesWidget: (value, meta) {
+  //                         return Text(
+  //                           '${value.toInt()}',
+  //                           style: TextStyle(
+  //                             color: AppTheme.text1,
+  //                             fontSize: 12,
+  //                           ),
+  //                         );
+  //                       },
+  //                     ),
+  //                   ),
+  //                 ),
+  //                 borderData: FlBorderData(
+  //                   show: true,
+  //                   border:
+  //                       Border.all(color: AppTheme.bg2.withValues(alpha: 0.5)),
+  //                 ),
+  //                 minX: minX,
+  //                 maxX: maxX,
+  //                 minY: minY,
+  //                 maxY: maxY,
+  //                 lineBarsData: [
+  //                   LineChartBarData(
+  //                     spots: impedanceData,
+  //                     isCurved: true,
+  //                     color: AppTheme.bg3,
+  //                     barWidth: 3,
+  //                     isStrokeCapRound: true,
+  //                     dotData: FlDotData(show: true),
+  //                     belowBarData: BarAreaData(
+  //                       show: true,
+  //                       color: AppTheme.bg3.withValues(alpha: 0.2),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }

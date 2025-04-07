@@ -225,10 +225,12 @@ class _ResultsPageState extends State<ResultsPage> {
                     if (matchingNetworkType == 'quarterwave')
                       AppWidgets.buildImpedanceGraph(flSpots),
                     if (matchingNetworkType == 'lumped')
-                      // want to add series & shunt graphs here
-                      // AppWidgets.buildImpedanceGraph(lumpedSeriesPts),
-                      if (matchingNetworkType == 'singlestub')
-                        AppWidgets.buildImpedanceGraph(flSpots),
+                      AppWidgets.buildImpedanceGraph(
+                        lumpedSeriesPts,
+                        secondaryData: lumpedShuntPts,
+                      ),
+                    if (matchingNetworkType == 'singlestub')
+                      AppWidgets.buildImpedanceGraph(flSpots),
                   ],
                   options: CarouselOptions(
                     height: double.infinity,
