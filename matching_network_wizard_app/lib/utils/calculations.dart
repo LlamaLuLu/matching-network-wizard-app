@@ -22,6 +22,42 @@ class Calculations {
 
       String xType = AppWidgets.capOrInd('x', x);
       String bType = AppWidgets.capOrInd('b', b);
+      // if X pos -> inductor, if X neg -> capacitor
+      // if B pos -> capacitor, if B neg -> inductor
+
+      if ((xType == 'Capacitor') && (bType == 'Capacitor')) {
+        ci = calcCapX(x, z0, f);
+        ic = calcCapB(b, z0, f);
+      } else if ((xType == 'Inductor') && (bType == 'Inductor')) {
+        ci = calcIndX(x, z0, f);
+        ic = calcIndB(b, z0, f);
+      } else if ((xType == 'Capacitor') && (bType == 'Inductor')) {
+        ci = calcCapX(x, z0, f);
+        ic = calcIndB(b, z0, f);
+      } else if ((xType == 'Inductor') && (bType == 'Capacitor')) {
+        ci = calcIndX(x, z0, f);
+        ic = calcCapB(b, z0, f);
+      } else {
+        ci = 0;
+        ic = 0;
+      }
+
+      capIndValues.add(ci);
+      capIndValues.add(ic);
+    }
+    return capIndValues;
+  }
+
+  static List<double> calcCapIndValues2(
+      List<double> bList, List<double> xList, double z0, double f) {
+    final List<double> capIndValues = [];
+    for (int i = 0; i < bList.length; i++) {
+      double b = bList[i];
+      double x = xList[i];
+      double ci, ic;
+
+      String xType = AppWidgets.capOrInd('x', x);
+      String bType = AppWidgets.capOrInd('b', b);
 
       if (xType == 'Capacitor') {
         ci = calcCap(b, x, z0, f);
@@ -46,6 +82,28 @@ class Calculations {
     return capIndValues;
   }
 
+  static double calcCapX(double X, double z0, double f) {
+    double c, term1, term2;
+    double x = X / z0;
+
+    term1 = -1 / (2 * pi * f);
+    term2 = 1 / (x * z0);
+    c = term1 * term2;
+
+    return c;
+  }
+
+  static double calcCapB(double B, double z0, double f) {
+    double c, term1, term2;
+    double b = B * z0;
+
+    term1 = 1 / (2 * pi * f);
+    term2 = b / z0;
+    c = term1 * term2;
+
+    return c;
+  }
+
   static double calcCap(double B, double X, double z0, double f) {
     double c, term1, term2;
     double b = B * z0;
@@ -61,6 +119,28 @@ class Calculations {
     c = term1 * term2;
 
     return c;
+  }
+
+  static double calcIndX(double X, double z0, double f) {
+    double l, term1, term2;
+    double x = X / z0;
+
+    term1 = 1 / (2 * pi * f);
+    term2 = x * z0;
+    l = term1 * term2;
+
+    return l;
+  }
+
+  static double calcIndB(double B, double z0, double f) {
+    double l, term1, term2;
+    double b = B * z0;
+
+    term1 = -1 / (2 * pi * f);
+    term2 = z0 / b;
+    l = term1 * term2;
+
+    return l;
   }
 
   static double calcInd(double B, double X, double z0, double f) {
