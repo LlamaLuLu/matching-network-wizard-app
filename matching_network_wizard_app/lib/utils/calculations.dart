@@ -5,6 +5,11 @@ import 'package:matching_network_wizard_app/utils/app_widgets.dart';
 import 'package:matching_network_wizard_app/utils/constants.dart';
 
 class Calculations {
+  static Complex normalize(double z0, Complex zL) {
+    Complex zLNorm = Complex(zL.real / z0, zL.imaginary / z0);
+    return zLNorm;
+  }
+
   //----------------------- QUARTER WAVE TRANSFORMER ----------------------//
   static double calcZQWT(double z0, double zLRe) {
     double zQWT = sqrt(z0 * zLRe);

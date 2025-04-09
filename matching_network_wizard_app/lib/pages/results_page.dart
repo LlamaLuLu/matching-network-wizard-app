@@ -29,6 +29,7 @@ class _ResultsPageState extends State<ResultsPage> {
   int _currentIndex = 0;
   String matchingNetwork = '';
   bool autoMode = false;
+  bool isMatched = false;
   List<double> userInputs = [0, 0, 0, 0];
   List<double> calculatedData = [0, 0, 0, 0, 0, 0, 0, 0];
   List<double> capIndValues = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -51,6 +52,10 @@ class _ResultsPageState extends State<ResultsPage> {
     bool auto = await SavedData.getAutoMode();
     autoMode = auto;
     debugPrint('Auto Mode: $autoMode');
+    // matched
+    bool matched = await SavedData.getMatched();
+    isMatched = matched;
+    debugPrint('Matched: $isMatched');
 
     // user inputs
     double z0 = await SavedData.getZ0();
@@ -165,7 +170,7 @@ class _ResultsPageState extends State<ResultsPage> {
 
                   // heading: Results
                   Padding(
-                    padding: const EdgeInsets.only(top: 15, bottom: 25),
+                    padding: const EdgeInsets.only(top: 5, bottom: 25),
                     child: AppWidgets.headingText('Results', AppTheme.text2),
                   ),
                 ],
@@ -217,6 +222,7 @@ class _ResultsPageState extends State<ResultsPage> {
                         matchingNetworkType,
                         matchingNetwork,
                         autoMode,
+                        isMatched,
                         calculatedData,
                         userInputs,
                         capIndValues),
@@ -249,8 +255,8 @@ class _ResultsPageState extends State<ResultsPage> {
 
               if (matchingNetworkType != 'lumped')
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 25, horizontal: 27),
+                  padding: const EdgeInsets.only(
+                      bottom: 35, top: 25, left: 27, right: 27),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -269,7 +275,7 @@ class _ResultsPageState extends State<ResultsPage> {
               // if lumped -> regenerate button
               if (matchingNetworkType == 'lumped')
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 25, top: 25),
+                  padding: const EdgeInsets.only(bottom: 35, top: 25),
                   child: AppWidgets.greenButton(
                       'Regenerate', () => ButtonFuncs.regenBtn(context)),
                 ),

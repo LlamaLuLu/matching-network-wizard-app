@@ -78,6 +78,18 @@ class AppWidgets {
     );
   }
 
+  static Widget resultHeading1(String text) {
+    return Text(
+      text,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: AppTheme.text1,
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+
   static Widget resultHeading2(String text) {
     return Text(
       text,
@@ -254,6 +266,7 @@ class AppWidgets {
       String matchingNetworkType,
       String matchingNetwork,
       bool autoMode,
+      bool isMatched,
       List<double> calculatedData,
       List<double> userInputs,
       List<double> capIndValues) {
@@ -274,176 +287,182 @@ class AppWidgets {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '$matchingNetwork Parameters',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppTheme.text1,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            if (isMatched || autoMode)
+              Center(child: resultHeading1('Design Parameters')),
+            if (!isMatched && !autoMode)
+              Center(child: resultHeading1('$matchingNetwork Parameters')),
+
             const SizedBox(height: 15),
-            // show network type only if on 'auto'
-            if (autoMode)
+
+            // already matched
+            if (isMatched)
               Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: buildParameterRow('Best Solution', matchingNetwork),
+                padding: const EdgeInsets.only(top: 20, bottom: 70),
+                child: Center(child: resultHeading2('Circuit is Matched')),
               ),
-            // if matchingNetworkType == 'quarterwave'
-            // show: ZQWT
-            if (matchingNetworkType == 'quarterwave')
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Column(
-                  children: [
-                    buildParameterRow(
-                        'ZQWT',
-                        (userInputs[2] != 0)
-                            ? 'Load not\npurely real'
-                            : '${calculatedData[0].toStringAsFixed(3)} Ω'),
-                    buildParameterRow(('\u03BB/4'),
-                        '${calculatedData[1].toStringAsExponential(3)} m'),
-                  ],
-                ),
-              ),
-            if (matchingNetworkType == 'lumped')
+            // not matched yet
+            if (!isMatched)
               Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // series first
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: resultHeading2('Series First Solution'),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
-                    child: resultHeading3('Design 1'),
-                  ),
-                  buildParameterRow(
-                      'X1', calculatedData[4].toStringAsExponential(3)),
-                  buildParameterRow(
-                      (capOrInd('X', calculatedData[4])),
-                      capOrIndValue(
-                          capIndValues[4], capOrInd('X', calculatedData[4]))),
-
-                  buildParameterRow(
-                      'B1', calculatedData[6].toStringAsExponential(3)),
-                  buildParameterRow(
-                      (capOrInd('b', calculatedData[6])),
-                      capOrIndValue(
-                          capIndValues[6], capOrInd('b', calculatedData[6]))),
-
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
-                    child: resultHeading3('Design 2'),
-                  ),
-                  buildParameterRow(
-                      'X2', calculatedData[5].toStringAsExponential(3)),
-                  buildParameterRow(
-                      (capOrInd('X', calculatedData[5])),
-                      capOrIndValue(
-                          capIndValues[5], capOrInd('X', calculatedData[5]))),
-
-                  buildParameterRow(
-                      'B2', calculatedData[7].toStringAsExponential(3)),
-                  buildParameterRow(
-                      (capOrInd('b', calculatedData[7])),
-                      capOrIndValue(
-                          capIndValues[7], capOrInd('b', calculatedData[7]))),
-
-                  // shunt first
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15, bottom: 8),
-                    child: resultHeading2('Shunt First Solution'),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
-                    child: resultHeading3('Design 1'),
-                  ),
-                  buildParameterRow(
-                      'B1', calculatedData[2].toStringAsExponential(3)),
-                  buildParameterRow(
-                      (capOrInd('b', calculatedData[2])),
-                      capOrIndValue(
-                          capIndValues[2], capOrInd('b', calculatedData[2]))),
-
-                  buildParameterRow(
-                      'X1', calculatedData[0].toStringAsExponential(3)),
-                  buildParameterRow(
-                      (capOrInd('X', calculatedData[0])),
-                      capOrIndValue(
-                          capIndValues[0], capOrInd('X', calculatedData[0]))),
-
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
-                    child: resultHeading3('Design 2'),
-                  ),
-                  buildParameterRow(
-                      'B2', calculatedData[3].toStringAsExponential(3)),
-                  buildParameterRow(
-                      (capOrInd('b', calculatedData[3])),
-                      capOrIndValue(
-                          capIndValues[3], capOrInd('b', calculatedData[3]))),
-
-                  buildParameterRow(
-                      'X2', calculatedData[1].toStringAsExponential(3)),
-                  buildParameterRow(
-                      (capOrInd('X', calculatedData[1])),
-                      capOrIndValue(
-                          capIndValues[1], capOrInd('X', calculatedData[1]))),
-                ],
-              ),
-
-            if (matchingNetworkType == 'singlestub')
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // shunt stub 1
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
-                    child: Text(
-                      'Shunt Stub Solution 1',
-                      style: TextStyle(
-                        color: AppTheme.text1,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                  if (autoMode)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child:
+                          buildParameterRow('Best\nSolution', matchingNetwork),
+                    ),
+                  if (matchingNetworkType == 'quarterwave')
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Column(
+                        children: [
+                          buildParameterRow(
+                              'ZQWT',
+                              (userInputs[2] != 0)
+                                  ? 'Load not\npurely real'
+                                  : '${calculatedData[0].toStringAsFixed(3)} Ω'),
+                          buildParameterRow(('\u03BB/4'),
+                              '${calculatedData[1].toStringAsExponential(3)} m'),
+                        ],
                       ),
                     ),
-                  ),
-                  buildParameterRow(
-                      't', calculatedData[0].toStringAsExponential(3)),
-                  buildParameterRow(
-                      'd/\u03BB', calculatedData[2].toStringAsExponential(3)),
-                  buildParameterRow(
-                      'B', calculatedData[4].toStringAsExponential(3)),
-                  buildParameterRow('L/\u03BB (open)',
-                      calculatedData[6].toStringAsExponential(3)),
-                  buildParameterRow('L/\u03BB (short)',
-                      calculatedData[8].toStringAsExponential(3)),
+                  if (matchingNetworkType == 'lumped')
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // series first
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: resultHeading2('Series First Solution'),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 5),
+                          child: resultHeading3('Design 1'),
+                        ),
+                        buildParameterRow(
+                            'X1', calculatedData[4].toStringAsExponential(3)),
+                        buildParameterRow(
+                            (capOrInd('X', calculatedData[4])),
+                            capOrIndValue(capIndValues[4],
+                                capOrInd('X', calculatedData[4]))),
 
-                  // shunt stub 2
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15, bottom: 5),
-                    child: Text(
-                      'Shunt Stub Solution 2',
-                      style: TextStyle(
-                        color: AppTheme.text1,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                        buildParameterRow(
+                            'B1', calculatedData[6].toStringAsExponential(3)),
+                        buildParameterRow(
+                            (capOrInd('b', calculatedData[6])),
+                            capOrIndValue(capIndValues[6],
+                                capOrInd('b', calculatedData[6]))),
+
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 5),
+                          child: resultHeading3('Design 2'),
+                        ),
+                        buildParameterRow(
+                            'X2', calculatedData[5].toStringAsExponential(3)),
+                        buildParameterRow(
+                            (capOrInd('X', calculatedData[5])),
+                            capOrIndValue(capIndValues[5],
+                                capOrInd('X', calculatedData[5]))),
+
+                        buildParameterRow(
+                            'B2', calculatedData[7].toStringAsExponential(3)),
+                        buildParameterRow(
+                            (capOrInd('b', calculatedData[7])),
+                            capOrIndValue(capIndValues[7],
+                                capOrInd('b', calculatedData[7]))),
+
+                        // shunt first
+                        Padding(
+                          padding: const EdgeInsets.only(top: 15, bottom: 8),
+                          child: resultHeading2('Shunt First Solution'),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 5),
+                          child: resultHeading3('Design 1'),
+                        ),
+                        buildParameterRow(
+                            'B1', calculatedData[2].toStringAsExponential(3)),
+                        buildParameterRow(
+                            (capOrInd('b', calculatedData[2])),
+                            capOrIndValue(capIndValues[2],
+                                capOrInd('b', calculatedData[2]))),
+
+                        buildParameterRow(
+                            'X1', calculatedData[0].toStringAsExponential(3)),
+                        buildParameterRow(
+                            (capOrInd('X', calculatedData[0])),
+                            capOrIndValue(capIndValues[0],
+                                capOrInd('X', calculatedData[0]))),
+
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 5),
+                          child: resultHeading3('Design 2'),
+                        ),
+                        buildParameterRow(
+                            'B2', calculatedData[3].toStringAsExponential(3)),
+                        buildParameterRow(
+                            (capOrInd('b', calculatedData[3])),
+                            capOrIndValue(capIndValues[3],
+                                capOrInd('b', calculatedData[3]))),
+
+                        buildParameterRow(
+                            'X2', calculatedData[1].toStringAsExponential(3)),
+                        buildParameterRow(
+                            (capOrInd('X', calculatedData[1])),
+                            capOrIndValue(capIndValues[1],
+                                capOrInd('X', calculatedData[1]))),
+                      ],
                     ),
-                  ),
-                  buildParameterRow(
-                      't', calculatedData[1].toStringAsExponential(3)),
-                  buildParameterRow(
-                      'd/\u03BB', calculatedData[3].toStringAsExponential(3)),
-                  buildParameterRow(
-                      'B', calculatedData[5].toStringAsExponential(3)),
-                  buildParameterRow('L/\u03BB (open)',
-                      calculatedData[7].toStringAsExponential(3)),
-                  buildParameterRow('L/\u03BB (short)',
-                      calculatedData[9].toStringAsExponential(3)),
+                  if (matchingNetworkType == 'singlestub')
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // shunt stub 1
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 5),
+                          child: Text(
+                            'Shunt Stub Solution 1',
+                            style: TextStyle(
+                              color: AppTheme.text1,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        buildParameterRow(
+                            't', calculatedData[0].toStringAsExponential(3)),
+                        buildParameterRow('d/\u03BB',
+                            calculatedData[2].toStringAsExponential(3)),
+                        buildParameterRow(
+                            'B', calculatedData[4].toStringAsExponential(3)),
+                        buildParameterRow('L/\u03BB (open)',
+                            calculatedData[6].toStringAsExponential(3)),
+                        buildParameterRow('L/\u03BB (short)',
+                            calculatedData[8].toStringAsExponential(3)),
+
+                        // shunt stub 2
+                        Padding(
+                          padding: const EdgeInsets.only(top: 15, bottom: 5),
+                          child: Text(
+                            'Shunt Stub Solution 2',
+                            style: TextStyle(
+                              color: AppTheme.text1,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        buildParameterRow(
+                            't', calculatedData[1].toStringAsExponential(3)),
+                        buildParameterRow('d/\u03BB',
+                            calculatedData[3].toStringAsExponential(3)),
+                        buildParameterRow(
+                            'B', calculatedData[5].toStringAsExponential(3)),
+                        buildParameterRow('L/\u03BB (open)',
+                            calculatedData[7].toStringAsExponential(3)),
+                        buildParameterRow('L/\u03BB (short)',
+                            calculatedData[9].toStringAsExponential(3)),
+                      ],
+                    ),
                 ],
               ),
 
@@ -515,14 +534,8 @@ class AppWidgets {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            'Circuit Diagram',
-            style: TextStyle(
-              color: AppTheme.text1,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          resultHeading1('Circuit Diagram'),
+
           const SizedBox(height: 8),
           Expanded(
             child: Center(
@@ -612,14 +625,8 @@ class AppWidgets {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            'Impedance vs Frequency',
-            style: TextStyle(
-              color: AppTheme.text1,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          resultHeading1('Impedance vs Frequency'),
+
           const SizedBox(height: 24),
           Expanded(
             child: Padding(

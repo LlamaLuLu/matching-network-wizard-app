@@ -72,22 +72,22 @@ class ButtonFuncs {
   // MATCHING NETWORK TYPES:
 
   static void autoMatchingBtn(BuildContext context) async {
-    // placeholder for auto matching logic
     // if auto-matching -> needs to choose most optimal matching network
     await SavedData.setAutoMode(true);
+    await SavedData.checkIfMatched();
 
     Complex zL = await SavedData.getZL();
     if (zL.imaginary == 0) {
       quarterWaveBtn(context);
       debugPrint('Quarter Wave Transformer Selected');
     } else {
-      lumpedElementBtn(context);
+      singleStubBtn(context);
       debugPrint('Auto Matching Network Type Selected');
     }
   }
 
   static void quarterWaveBtn(BuildContext context) async {
-    // placeholder for QWT button logic
+    await SavedData.checkIfMatched();
 
     await SavedData.setMatchingNetworkType('quarterwave');
     debugPrint('Quarter Wave Transformer Selected');
@@ -105,7 +105,7 @@ class ButtonFuncs {
   }
 
   static void lumpedElementBtn(BuildContext context) async {
-    // placeholder for lumped element button logic
+    await SavedData.checkIfMatched();
 
     await SavedData.setMatchingNetworkType('lumped');
     debugPrint('Lumped Element Matching Network Selected');
@@ -141,7 +141,7 @@ class ButtonFuncs {
   }
 
   static void singleStubBtn(BuildContext context) async {
-    // placeholder for single stub button logic
+    await SavedData.checkIfMatched();
 
     await SavedData.setMatchingNetworkType('singlestub');
     debugPrint('Single Stub Matching Network Selected');

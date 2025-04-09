@@ -67,7 +67,7 @@ class _PcbInputsPageState extends State<PcbInputsPage> {
 
               // next button
               Padding(
-                  padding: const EdgeInsets.only(bottom: 80),
+                  padding: const EdgeInsets.only(bottom: 90),
                   child: AppWidgets.pinkButton(
                     'Next',
                     () => ButtonFuncs.pcbInputsBtn(

@@ -24,7 +24,7 @@ class SelectionPage extends StatelessWidget {
 
                   // heading: Selection
                   Padding(
-                    padding: const EdgeInsets.only(top: 30, bottom: 25),
+                    padding: const EdgeInsets.only(top: 25, bottom: 25),
                     child: AppWidgets.headingText(
                         'Matching Network Selection', AppTheme.text2),
                   ),
@@ -58,7 +58,7 @@ class SelectionPage extends StatelessWidget {
                     AppTheme.text5,
                     AppTheme.bg5),
               ),
-              SizedBox(height: 35),
+              SizedBox(height: 45),
             ],
           ),
         ),

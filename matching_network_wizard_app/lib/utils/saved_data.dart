@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:complex/complex.dart';
 import 'package:flutter/material.dart';
+import 'package:matching_network_wizard_app/utils/calculations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SavedData {
@@ -22,6 +23,7 @@ class SavedData {
   // matching network type
   static const String matchingNetworkTypeKey = 'matchingNetworkType';
   static const String autoModeKey = 'autoMode';
+  static const String matchedKey = 'matched';
 
   // pcb
   static const String widthKey = 'width';
@@ -83,8 +85,12 @@ class SavedData {
     await prefs.remove(zLImKey);
     await prefs.remove(z0Key);
     await prefs.remove(fKey);
+    await prefs.remove(widthKey);
+    await prefs.remove(heightKey);
+    await prefs.remove(epsilonRKey);
     await prefs.remove(matchingNetworkTypeKey);
     await prefs.remove(autoModeKey);
+    await prefs.remove(matchedKey);
 
     debugPrint('Cleared all saved data');
 
@@ -140,6 +146,19 @@ class SavedData {
     await setWidth(w);
     await setHeight(h);
     await setEpsilonR(epsilonR);
+  }
+
+  static Future<void> checkIfMatched() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    final z0 = await getZ0();
+    final zL = await getZL();
+    final zLNorm = Calculations.normalize(z0, zL);
+    if (zLNorm.real == 1 && zLNorm.imaginary == 0) {
+      await setMatched(true);
+    } else {
+      await setMatched(false);
+    }
   }
 
   /*
@@ -263,6 +282,17 @@ class SavedData {
   static Future<bool> getAutoMode() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(autoModeKey) ?? false; // Default value if not set
+  }
+
+  // matched
+  static Future<void> setMatched(bool matched) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(matchedKey, matched);
+  }
+
+  static Future<bool> getMatched() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(matchedKey) ?? false; // Default value if not set
   }
 
   // zQWT

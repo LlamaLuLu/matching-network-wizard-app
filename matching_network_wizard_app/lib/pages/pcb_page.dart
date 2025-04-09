@@ -38,7 +38,7 @@ class _PcbPageState extends State<PcbPage> {
 
                   // heading: PCB Design
                   Padding(
-                    padding: const EdgeInsets.only(top: 30, bottom: 30),
+                    padding: const EdgeInsets.only(top: 20, bottom: 35),
                     child: AppWidgets.headingText('PCB Design', AppTheme.text2),
                   ),
                 ],
@@ -108,7 +108,7 @@ class _PcbPageState extends State<PcbPage> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 36, top: 15, left: 35),
+                  padding: const EdgeInsets.only(bottom: 55, left: 35),
                   child: AppWidgets.greenButton(
                       'Regenerate', () => ButtonFuncs.regenBtn(context)),
                 ),
@@ -118,7 +118,7 @@ class _PcbPageState extends State<PcbPage> {
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 30, right: 32),
+        padding: const EdgeInsets.only(bottom: 49, right: 32),
         child: FloatingActionButton(
           onPressed: () {
             // Add your action here
