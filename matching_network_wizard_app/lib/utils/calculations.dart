@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:complex/complex.dart';
 import 'package:flutter/material.dart';
 import 'package:matching_network_wizard_app/utils/app_widgets.dart';
+import 'package:matching_network_wizard_app/utils/constants.dart';
 
 class Calculations {
   //----------------------- QUARTER WAVE TRANSFORMER ----------------------//
@@ -209,12 +210,15 @@ class Calculations {
   static List<double> calcLOpenDivLambda(List<double> bList, double z0) {
     // Bs = -B
     final y0 = 1 / z0;
+    final term1 = -1 / (2 * pi);
+
     final List<double> lOpenDivLambdaList = [];
     for (final b in bList) {
-      final term1 = -1 / (2 * pi);
       final term2 = atan(b / y0);
-      final lOpenDivLambda = term1 * term2;
-      // if lShortDivLambda is negative, add lambda/2 to it
+      double lOpenDivLambda = term1 * term2;
+      if (lOpenDivLambda < 0) {
+        lOpenDivLambda += 0.5;
+      }
       lOpenDivLambdaList.add(lOpenDivLambda);
     }
     return lOpenDivLambdaList;
@@ -227,8 +231,10 @@ class Calculations {
     for (final b in bList) {
       final term1 = 1 / (2 * pi);
       final term2 = atan(y0 / b);
-      final lShortDivLambda = term1 * term2;
-      // if lShortDivLambda is negative, add lambda/2 to it
+      double lShortDivLambda = term1 * term2;
+      if (lShortDivLambda < 0) {
+        lShortDivLambda += 0.5;
+      }
       lShortDivLambdaList.add(lShortDivLambda);
     }
     return lShortDivLambdaList;
