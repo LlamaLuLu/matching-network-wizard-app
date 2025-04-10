@@ -26,7 +26,6 @@ class SavedData {
   static const String matchedKey = 'matched';
 
   // pcb
-  static const String widthKey = 'width';
   static const String heightKey = 'height';
   static const String epsilonRKey = 'epsilonR';
 
@@ -72,6 +71,10 @@ class SavedData {
   static const String lOpenDivLambda2 = 'lOpen2';
   static const String lShortDivLambda1 = 'lShort1';
   static const String lShortDivLambda2 = 'lShort2';
+
+  // PCB DESIGN
+  static const String widthKey = 'width';
+  static const String lengthKey = 'length';
 
   //---------------------- FUNCTIONS ----------------------//
 
@@ -140,10 +143,8 @@ class SavedData {
     await setBB(bB);
   }
 
-  static Future<void> savePCBInputsData(
-      double w, double h, double epsilonR) async {
+  static Future<void> savePCBInputsData(double h, double epsilonR) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await setWidth(w);
     await setHeight(h);
     await setEpsilonR(epsilonR);
   }
@@ -166,17 +167,6 @@ class SavedData {
   */
 
   // FOR PCB:
-  // width
-  static Future<void> setWidth(double width) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(widthKey, width);
-  }
-
-  static Future<double> getWidth() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble(widthKey) ?? 0.0; // Default value if not set
-  }
-
   // height
   static Future<void> setHeight(double height) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -197,6 +187,28 @@ class SavedData {
   static Future<double> getEpsilonR() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getDouble(epsilonRKey) ?? 0.0; // Default value if not set
+  }
+
+  // width
+  static Future<void> setWidth(double width) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(widthKey, width);
+  }
+
+  static Future<double> getWidth() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(widthKey) ?? 0.0; // Default value if not set
+  }
+
+  // length
+  static Future<void> setLength(double length) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(lengthKey, length);
+  }
+
+  static Future<double> getLength() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(lengthKey) ?? 0.0; // Default value if not set
   }
 
   // cap & ind values

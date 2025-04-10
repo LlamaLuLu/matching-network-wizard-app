@@ -9,6 +9,16 @@ import 'package:matching_network_wizard_app/utils/saved_data.dart';
 // () => ButtonFuncs.startBtn(context)
 
 class ButtonFuncs {
+  static void regenBtn(BuildContext context, bool pcbMode) async {
+    // clear saved data
+    await SavedData.clearSavedData();
+    if (pcbMode) {
+      Navigator.pop(context, '/pcb_inputs');
+    } else {
+      Navigator.pushNamed(context, '/inputs');
+    }
+  }
+
   // PAGE NAVIGATION:
 
   static void startBtn(BuildContext context) {
@@ -41,32 +51,23 @@ class ButtonFuncs {
     Navigator.pushNamed(context, '/selection');
   }
 
-  static void pcbInputsBtn(
-      BuildContext context,
-      TextEditingController wController,
-      TextEditingController hController,
-      TextEditingController epsilonRController) async {
-    double w = double.tryParse(wController.text) ?? 0.0;
-    w *= pow(10, -3);
-    double h = double.tryParse(hController.text) ?? 0.0;
-    h *= pow(10, -3);
-    double epsilonR = double.tryParse(epsilonRController.text) ??
-        4.5; // default for relative permittivity
-    debugPrint('Processed PCB Inputs: \nw: $w, h: $h, epsilonR: $epsilonR');
-
-    await SavedData.savePCBInputsData(w, h, epsilonR);
-
-    Navigator.pushNamed(context, '/pcb');
-  }
-
   static void pcbBtn(BuildContext context) {
     Navigator.pushNamed(context, '/pcb_inputs');
   }
 
-  static void regenBtn(BuildContext context) async {
-    // clear saved data
-    await SavedData.clearSavedData();
-    Navigator.pushNamed(context, '/inputs');
+  static void pcbInputsBtn(
+      BuildContext context,
+      TextEditingController hController,
+      TextEditingController epsilonRController) async {
+    double h = double.tryParse(hController.text) ?? 1.6; // default for FR4
+    h *= pow(10, -3);
+    double epsilonR =
+        double.tryParse(epsilonRController.text) ?? 4.4; // default for FR4
+    debugPrint('Processed PCB Inputs: \n h: $h, epsilonR: $epsilonR');
+
+    await SavedData.savePCBInputsData(h, epsilonR);
+
+    Navigator.pushNamed(context, '/pcb');
   }
 
   // MATCHING NETWORK TYPES:

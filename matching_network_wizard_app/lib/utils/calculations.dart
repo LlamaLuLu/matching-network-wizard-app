@@ -245,10 +245,49 @@ class Calculations {
     return lShortDivLambdaList;
   }
 
-  //------------------- PCB CALCULATIONS ----------------------//
-  static double calcW(double z0, double h, double epsilonR) {
-    //double epsilon_eff = (epsilon_r + 1) / 2 + ((epsilon_r - 1) / 2) * (1 / (math.sqrt(1 + 12 * h / Z0)));
-    //double w = (Z0 / 60) * math.sqrt(2 / (epsilon_eff + 1)) * math.log((4 * h / w) + math.sqrt(1 + (4 * h / w)**2))
-    return 0;
+  //--------------------------- PCB DESIGN --------------------------------//
+  // Calculate ε_eff (Effective dielectric constant)
+  static double calcEpsilonEff(double w, double h, double epsilonR) {
+    double whRatio = w / h;
+    return (epsilonR + 1) / 2 +
+        ((epsilonR - 1) / 2) * (1 / sqrt(1 + 12 / whRatio));
+  }
+
+  // Guided wavelength λg in mm
+  static double calcLambdaG(double epsilonEff, double f) {
+    double lambda = Constants.C / (f * sqrt(epsilonEff)); // in meters
+    return lambda * 1000; // Convert to mm
+  }
+
+  // Estimate width W (in mm) using iterative approach
+  static double estimateWidth(double h, double z0, double epsilonR) {
+    double w = h; // Start with W = h
+    double step = h / 10;
+    double targetZ0 = z0;
+    for (int i = 0; i < 1000; i++) {
+      double whRatio = w / h;
+      double eeff = calcEpsilonEff(w, h, epsilonR);
+      double z;
+
+      if (whRatio <= 2) {
+        z = (60 / sqrt(eeff)) * log(8 / whRatio + 0.25 * whRatio);
+      } else {
+        z = (120 * pi) /
+            (sqrt(eeff) * (whRatio + 1.393 + 0.667 * log(whRatio + 1.444)));
+      }
+
+      if ((z - targetZ0).abs() < 0.1) return w * 1000; // return mm
+      w += (z > targetZ0) ? step : -step;
+    }
+    return -1; // If no solution found
+  }
+
+  // Get track length for given electrical angle (e.g. 90°)
+  static double getTrackLength(
+      double degrees, double z0, double h, double epsilonR, double f) {
+    double w = estimateWidth(h, z0, epsilonR);
+    double epsilonEff = calcEpsilonEff(w, h, epsilonR);
+    double lambdaG = calcLambdaG(epsilonEff, f);
+    return (degrees / 360) * lambdaG;
   }
 }

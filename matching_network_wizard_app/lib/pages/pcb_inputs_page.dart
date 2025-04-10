@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:matching_network_wizard_app/utils/app_theme.dart';
 import 'package:matching_network_wizard_app/utils/app_widgets.dart';
 import 'package:matching_network_wizard_app/utils/button_funcs.dart';
+import 'package:matching_network_wizard_app/utils/saved_data.dart';
 
 class PcbInputsPage extends StatefulWidget {
   const PcbInputsPage({super.key});
@@ -11,11 +12,24 @@ class PcbInputsPage extends StatefulWidget {
 }
 
 class _PcbInputsPageState extends State<PcbInputsPage> {
-  final TextEditingController wController = TextEditingController();
   final TextEditingController hController = TextEditingController();
   final TextEditingController epsilonRController = TextEditingController();
+  final TextEditingController fController = TextEditingController();
+
+  double f = 0;
 
   @override
+  void initState() {
+    super.initState();
+    setF();
+  }
+
+  Future<void> setF() async {
+    f = await SavedData.getF();
+    f = f / 1e9; // convert to GHz
+    setState(() {});
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.bg5,
@@ -31,7 +45,7 @@ class _PcbInputsPageState extends State<PcbInputsPage> {
                       // back arrow button
                       Padding(
                         padding: const EdgeInsets.only(left: 11),
-                        child: AppWidgets.backButton(context),
+                        child: AppWidgets.backButton(context, path: '/results'),
                       ),
 
                       // heading: Input Parameters
@@ -44,20 +58,21 @@ class _PcbInputsPageState extends State<PcbInputsPage> {
                       // input fields
                       Column(
                         children: [
-                          // AppWidgets.textField(
-                          //     label: 'w',
-                          //     controller: wController,
-                          //     hintText: 'Track width (mm)'),
                           AppWidgets.textField(
                               label: 'h ',
                               controller: hController,
-                              hintText: 'Dielectric thickness (mm)'),
+                              hintText: 'Dielectric thickness (1.6 mm)'),
                           AppWidgets.textField(
                               hasSubscript: true,
                               label: '\u03B5',
                               controller: epsilonRController,
                               subscript: 'r',
-                              hintText: 'Relative permittivity'),
+                              hintText: 'Relative permittivity (4.4)'),
+                          AppWidgets.textField(
+                              label: 'f  ',
+                              controller: fController,
+                              hintText:
+                                  'Frequency (${f.toStringAsExponential(1)} GHz)'),
                         ],
                       ),
                     ],
@@ -71,7 +86,7 @@ class _PcbInputsPageState extends State<PcbInputsPage> {
                   child: AppWidgets.pinkButton(
                     'Next',
                     () => ButtonFuncs.pcbInputsBtn(
-                        context, wController, hController, epsilonRController),
+                        context, hController, epsilonRController),
                   )),
             ],
           ),

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:matching_network_wizard_app/utils/app_theme.dart';
@@ -5,7 +7,7 @@ import 'package:matching_network_wizard_app/utils/saved_data.dart';
 
 class AppWidgets {
   //--------------------- BUTTONS ------------------------//
-  static Widget backButton(BuildContext context) {
+  static Widget backButton(BuildContext context, {String? path}) {
     return Align(
       alignment: Alignment.topLeft,
       child: IconButton(
@@ -13,7 +15,11 @@ class AppWidgets {
         color: AppTheme.text2,
         onPressed: () async {
           await SavedData.setAutoMode(false);
-          Navigator.pop(context);
+          if (path != null) {
+            Navigator.pushNamed(context, path);
+          } else {
+            Navigator.pop(context);
+          }
         },
       ),
     );
@@ -260,6 +266,32 @@ class AppWidgets {
     } else {
       return 'NaN';
     }
+  }
+
+  static bool isValidCap(double cVal) {
+    if (cVal < pow(1, -12) || cVal > pow(5, -9)) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  static bool isValidInd(double lVal) {
+    if (lVal < pow(5, -9) || lVal > pow(1, -6)) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  static bool isValidSolution(List<bool> validComponents) {
+    // Check if all components are valid
+    for (bool isValid in validComponents) {
+      if (!isValid) {
+        return false; // Return false if any component is invalid
+      }
+    }
+    return true; // All components are valid
   }
 
   static Widget buildParametersCard(
@@ -668,9 +700,10 @@ class AppWidgets {
     );
   }
 
-  static Widget buildPCBParametersCard() {
+  static Widget buildPCBParametersCard(List<double> userInputs,
+      List<double> calculatedData, String matchingNetwork) {
     return Container(
-      padding: const EdgeInsets.only(top: 30, left: 30, right: 30, bottom: 20),
+      padding: const EdgeInsets.only(top: 40, left: 30, right: 30, bottom: 20),
       decoration: BoxDecoration(
         color: AppTheme.bg1,
         borderRadius: BorderRadius.circular(18),
@@ -700,25 +733,32 @@ class AppWidgets {
               padding: const EdgeInsets.only(bottom: 20),
               child: Column(
                 children: [
-                  buildParameterRow('w', 'value'),
+                  buildParameterRow('Microstrip width',
+                      '${calculatedData[0].toStringAsExponential(2)} mm'),
+                  buildParameterRow('${matchingNetwork}Length',
+                      '${calculatedData[1].toStringAsExponential(2)} mm'),
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 20, bottom: 10),
+              padding: const EdgeInsets.only(top: 40, bottom: 10),
               child: resultHeading2('Your Inputs:'),
             ),
-            buildParameterRow('h', ' m'),
-            buildParameterRow('epsilonR', ' Hz'),
+            buildParameterRow('Dielectric height',
+                '${userInputs[0].toStringAsExponential(2)} mm'),
+            buildParameterRow('\u03B5r', userInputs[1].toString()),
+            buildParameterRow('Z0', '${userInputs[2].toStringAsFixed(1)} Ω'),
+            buildParameterRow(
+                'Frequency', '${userInputs[3].toStringAsExponential(3)} Hz'),
           ],
         ),
       ),
     );
   }
 
-  static Widget buildPCBDiagram() {
+  static Widget buildPCBDiagram(double w, double h) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 15),
+      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 8),
       decoration: BoxDecoration(
         color: AppTheme.bg1,
         borderRadius: BorderRadius.circular(18),
@@ -734,45 +774,38 @@ class AppWidgets {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            'PCB Diagram',
+            'Microstrip Dimensions',
             style: TextStyle(
               color: AppTheme.text1,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: Center(
-              // Replace this placeholder with your actual image loading
-              child: Image.asset(
-                'assets/image.PNG',
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: AppTheme.bg2.withValues(alpha: 0.3),
-                    child: Center(
-                      child: Icon(
-                        Icons.image_not_supported,
-                        size: 64,
-                        color: AppTheme.text1,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
           const SizedBox(height: 15),
-          // replace with diagram label
+          Image.asset(
+            'assets/microstrip_diag.PNG',
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: AppTheme.bg2.withValues(alpha: 0.3),
+                child: Center(
+                  child: Icon(
+                    Icons.image_not_supported,
+                    size: 64,
+                    color: AppTheme.text1,
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 30),
           Padding(
-            padding: const EdgeInsets.only(bottom: 5),
-            child: Text(
-              'Microstrip Support',
-              style: TextStyle(
-                color: AppTheme.text1,
-                fontSize: 14,
-              ),
+            padding: const EdgeInsets.symmetric(horizontal: 25),
+            child: Column(
+              children: [
+                buildParameterRow('w', '${w.toStringAsExponential(2)} mm'),
+                buildParameterRow('h', '${h.toStringAsExponential(2)} mm'),
+              ],
             ),
           ),
         ],

@@ -33,7 +33,7 @@ class _InputPageState extends State<InputPage> {
                       // back arrow button
                       Padding(
                         padding: const EdgeInsets.only(left: 11),
-                        child: AppWidgets.backButton(context),
+                        child: AppWidgets.backButton(context, path: '/start'),
                       ),
 
                       // heading: Input Parameters

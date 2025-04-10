@@ -22,11 +22,10 @@ class _ResultsPageState extends State<ResultsPage> {
   final CarouselSliderController _carouselController =
       CarouselSliderController();
   final List<String> _pageLabels = ['Parameters', 'Circuit', 'Graph'];
+  int _currentIndex = 0;
 
   // retrieved data
   String matchingNetworkType = '';
-  // vars to be used
-  int _currentIndex = 0;
   String matchingNetwork = '';
   bool autoMode = false;
   bool isMatched = false;
@@ -262,7 +261,7 @@ class _ResultsPageState extends State<ResultsPage> {
                     children: [
                       AppWidgets.greenButton(
                         'Regenerate',
-                        () => ButtonFuncs.regenBtn(context),
+                        () => ButtonFuncs.regenBtn(context, false),
                       ),
                       AppWidgets.greenButton(
                         'PCB Design',
@@ -277,7 +276,7 @@ class _ResultsPageState extends State<ResultsPage> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 35, top: 25),
                   child: AppWidgets.greenButton(
-                      'Regenerate', () => ButtonFuncs.regenBtn(context)),
+                      'Regenerate', () => ButtonFuncs.regenBtn(context, false)),
                 ),
             ],
           ),
