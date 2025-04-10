@@ -129,4 +129,144 @@ class ImpedanceGraph extends StatelessWidget {
 
     return spots;
   }
+
+  /// Generates impedance data for a single stub shunt matching network across a frequency range
+  static List<FlSpot> generateSingleStubImpedanceGraph({
+    required double zlReal,
+    required double zlImag,
+    required double z0,
+    required double f0MHz,
+    required double stubLength, // in wavelengths
+    required double distanceToLoad, // in wavelengths
+    int points = 200, // number of frequency points to calculate
+    double bandwidth =
+        0.5, // frequency range as a fraction of f0 (±0.5 means 0.5f0 to 1.5f0)
+  }) {
+    // Create list to store results
+    List<FlSpot> impedanceData = [];
+
+    // Calculate frequency range
+    double fMin = f0MHz * (1 - bandwidth);
+    double fMax = f0MHz * (1 + bandwidth);
+    double fStep = (fMax - fMin) / points;
+
+    // Load impedance at design frequency
+    Complex zL = Complex(zlReal, zlImag);
+
+    // For each frequency point
+    for (int i = 0; i <= points; i++) {
+      double frequency = fMin + (i * fStep);
+
+      // Scale wavelength ratio by frequency
+      double frequencyRatio = frequency / f0MHz;
+      double scaledDistance = distanceToLoad * frequencyRatio;
+      double scaledStubLength = stubLength * frequencyRatio;
+
+      // Calculate impedance at this frequency
+      // 1. Transform load impedance to stub junction using transmission line equation
+      Complex impedanceAtJunction = transformImpedanceAlongLine(
+        zL: zL,
+        z0: z0,
+        electricalLength:
+            scaledDistance * 2 * pi, // convert wavelength to radians
+      );
+
+      // 2. Calculate stub input impedance (open or short stub)
+      Complex stubImpedance = calculateStubImpedance(
+        z0: z0,
+        electricalLength:
+            scaledStubLength * 2 * pi, // convert wavelength to radians
+        isOpenStub: true, // change to false for short stub
+      );
+
+      // 3. Combine stub (in parallel) with the impedance at junction
+      Complex resultImpedance =
+          parallelImpedance(impedanceAtJunction, stubImpedance);
+
+      // 4. Transform this combined impedance to the input
+      Complex inputImpedance = transformImpedanceAlongLine(
+        zL: resultImpedance,
+        z0: z0,
+        electricalLength: 0, // We're already at the input (change if needed)
+      );
+
+      // Add to results
+      impedanceData.add(FlSpot(frequency, inputImpedance.abs()));
+    }
+
+    return impedanceData;
+  }
+
+// Helper function to transform impedance along a transmission line
+  static Complex transformImpedanceAlongLine({
+    required Complex zL,
+    required double z0,
+    required double electricalLength, // in radians
+  }) {
+    Complex z0Complex = Complex(z0, 0);
+
+    // Transmission line equation:
+    // Zin = Z0 * (ZL + j*Z0*tan(βL)) / (Z0 + j*ZL*tan(βL))
+    Complex numerator = zL +
+        (z0Complex * Complex(0, 1) * Complex.polar(1, tan(electricalLength)));
+    Complex denominator = z0Complex +
+        (zL * Complex(0, 1) * Complex.polar(1, tan(electricalLength)));
+
+    return z0Complex * (numerator / denominator);
+  }
+
+// Helper function to calculate stub impedance
+  static Complex calculateStubImpedance({
+    required double z0,
+    required double electricalLength, // in radians
+    required bool isOpenStub,
+  }) {
+    if (isOpenStub) {
+      // Open stub: Zin = -j*Z0/tan(βL)
+      return Complex(0, -z0 / tan(electricalLength));
+    } else {
+      // Shorted stub: Zin = j*Z0*tan(βL)
+      return Complex(0, z0 * tan(electricalLength));
+    }
+  }
+
+// Helper function to combine impedances in parallel
+  static Complex parallelImpedance(Complex z1, Complex z2) {
+    return (z1 * z2) / (z1 + z2);
+  }
+
+// Add this to compute single stub matching parameters based on ZL and Z0
+  static Map<String, double> computeSingleStubParameters({
+    required Complex zL,
+    required double z0,
+  }) {
+    // Normalized load impedance
+    double rN = zL.real / z0;
+    double xN = zL.imaginary / z0;
+
+    // Calculate stub distance from load (in wavelengths)
+    double y = sqrt((1 - rN) / rN);
+    double distanceToLoad = atan(y + xN / rN) / (2 * pi);
+
+    // Ensure positive distance
+    if (distanceToLoad < 0) {
+      distanceToLoad += 0.5; // Add half-wavelength
+    }
+
+    // Calculate stub admittance
+    double b = y / rN;
+
+    // Calculate stub length for open stub (in wavelengths)
+    double stubLength = atan(1 / b) / (2 * pi);
+
+    // Ensure positive length
+    if (stubLength < 0) {
+      stubLength += 0.5; // Add half-wavelength
+    }
+
+    return {
+      'distanceToLoad': distanceToLoad,
+      'stubLength': stubLength,
+    };
+  }
 }

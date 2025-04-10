@@ -143,10 +143,12 @@ class SavedData {
     await setBB(bB);
   }
 
-  static Future<void> savePCBInputsData(double h, double epsilonR) async {
+  static Future<void> savePCBInputsData(
+      double h, double epsilonR, double f) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await setHeight(h);
     await setEpsilonR(epsilonR);
+    await setF(f);
   }
 
   static Future<void> checkIfMatched() async {

@@ -666,7 +666,7 @@ class AppWidgets {
                 right: 16.0,
                 left: 8.0,
                 top: 8.0,
-                bottom: 20.0,
+                bottom: 15,
               ),
               child: LineChart(
                 LineChartData(
@@ -831,7 +831,7 @@ class AppWidgets {
         // Highlight the user frequency with a different color if provided
         if (userFrequency != null && (value - userFrequency).abs() < 0.01) {
           return FlLine(
-            color: Colors.orangeAccent.withOpacity(0.7),
+            color: Colors.orangeAccent.withValues(alpha: 0.7),
             strokeWidth: 2,
             dashArray: [5, 5],
           );
@@ -866,16 +866,19 @@ class AppWidgets {
             // Only show labels at multiples of the interval to prevent overcrowding
             if (value < minX ||
                 value > maxX ||
-                (value % (xInterval * 1.5) > 0.01 && value != userFrequency)) {
+                (value % (xInterval) > 0.01 && value != userFrequency)) {
               return const SizedBox.shrink();
             }
 
             bool isUserFreq =
                 userFrequency != null && (value - userFrequency).abs() < 0.01;
+
+            String displayValue = (value / 1000000).toStringAsFixed(2);
+
             return Text(
-              value.toStringAsFixed(1),
+              displayValue,
               style: TextStyle(
-                color: isUserFreq ? Colors.orangeAccent : AppTheme.text1,
+                color: isUserFreq ? AppTheme.bg5 : AppTheme.text1,
                 fontSize: 12,
                 fontWeight: isUserFreq ? FontWeight.bold : FontWeight.normal,
               ),
@@ -914,7 +917,7 @@ class AppWidgets {
       LineChartBarData(
         spots: impedanceData,
         isCurved: true,
-        color: AppTheme.bg3,
+        color: AppTheme.bg4,
         barWidth: 3,
         isStrokeCapRound: true,
         dotData: FlDotData(
@@ -926,7 +929,7 @@ class AppWidgets {
           getDotPainter: (spot, percent, barData, index) {
             return FlDotCirclePainter(
               radius: 5,
-              color: Colors.orangeAccent,
+              color: AppTheme.bg4,
               strokeWidth: 2,
               strokeColor: Colors.white,
             );
@@ -934,7 +937,7 @@ class AppWidgets {
         ),
         belowBarData: BarAreaData(
           show: true,
-          color: AppTheme.bg3.withValues(alpha: 0.2),
+          color: AppTheme.bg4.withValues(alpha: 0.2),
         ),
       ),
     ];
@@ -944,7 +947,7 @@ class AppWidgets {
         LineChartBarData(
           spots: secondaryData,
           isCurved: true,
-          color: Colors.redAccent,
+          color: AppTheme.bg2,
           barWidth: 3,
           isStrokeCapRound: true,
           dotData: FlDotData(
@@ -956,7 +959,7 @@ class AppWidgets {
             getDotPainter: (spot, percent, barData, index) {
               return FlDotCirclePainter(
                 radius: 5,
-                color: Colors.orangeAccent,
+                color: AppTheme.bg2,
                 strokeWidth: 2,
                 strokeColor: Colors.white,
               );
@@ -964,7 +967,7 @@ class AppWidgets {
           ),
           belowBarData: BarAreaData(
             show: true,
-            color: Colors.redAccent.withOpacity(0.2),
+            color: AppTheme.bg2.withValues(alpha: 0.2),
           ),
         ),
       );
@@ -981,18 +984,19 @@ class AppWidgets {
       verticalLines: [
         VerticalLine(
           x: userFrequency,
-          color: Colors.orangeAccent.withOpacity(0.7),
+          color: AppTheme.bg5.withValues(alpha: 0.5),
           strokeWidth: 2,
           dashArray: [5, 5],
           label: VerticalLineLabel(
             show: true,
-            alignment: Alignment.topCenter,
-            padding: const EdgeInsets.only(bottom: 8),
-            style: const TextStyle(
-              color: Colors.orangeAccent,
+            alignment: Alignment.topLeft,
+            padding: const EdgeInsets.only(top: 5, right: 3),
+            style: TextStyle(
+              color: AppTheme.bg5.withValues(alpha: 0.5),
               fontWeight: FontWeight.bold,
             ),
-            labelResolver: (line) => '${userFrequency.toStringAsFixed(2)} MHz',
+            labelResolver: (line) =>
+                '${(userFrequency / 1e6).toStringAsFixed(2)} MHz',
           ),
         ),
       ],
@@ -1011,7 +1015,7 @@ class AppWidgets {
               Container(
                 width: 16,
                 height: 4,
-                color: AppTheme.bg3,
+                color: AppTheme.bg4,
               ),
               const SizedBox(width: 4),
               Text(
@@ -1029,7 +1033,7 @@ class AppWidgets {
               Container(
                 width: 16,
                 height: 4,
-                color: Colors.redAccent,
+                color: AppTheme.bg2,
               ),
               const SizedBox(width: 4),
               Text(
@@ -1049,183 +1053,26 @@ class AppWidgets {
 // Helper method for frequency legend
   static Widget _buildFrequencyLegend(double userFrequency) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
             width: 16,
             height: 4,
-            color: Colors.orangeAccent,
+            color: AppTheme.bg5,
           ),
           const SizedBox(width: 4),
           Text(
-            'Selected: ${userFrequency.toStringAsFixed(2)} MHz',
+            'Selected: ${(userFrequency / 1e6).toStringAsFixed(2)} MHz',
             style: const TextStyle(
-              color: Colors.orangeAccent,
+              color: AppTheme.text1,
               fontSize: 12,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
       ),
     );
   }
-
-  // static Widget buildImpedanceGraph(List<FlSpot> impedanceData) {
-  //   const double paddingX = 0.1; // MHz
-  //   const double paddingY = 1.0; // Ohms
-
-  //   double minX = impedanceData.first.x - paddingX;
-  //   double maxX = impedanceData.last.x + paddingX;
-
-  //   double minY =
-  //       impedanceData.map((e) => e.y).reduce((a, b) => a < b ? a : b) -
-  //           paddingY;
-  //   double maxY =
-  //       impedanceData.map((e) => e.y).reduce((a, b) => a > b ? a : b) +
-  //           paddingY;
-
-  //   // Clamp minY to zero (in case it's negative)
-  //   minY = minY.clamp(0.0, double.infinity);
-  //   maxY = maxY.clamp(0.0, double.infinity);
-
-  //   return Container(
-  //     padding: const EdgeInsets.only(top: 20, left: 8, right: 8),
-  //     decoration: BoxDecoration(
-  //       color: AppTheme.bg1,
-  //       borderRadius: BorderRadius.circular(18),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: Colors.black.withValues(alpha: 0.1),
-  //           blurRadius: 8,
-  //           offset: const Offset(0, 3),
-  //         ),
-  //       ],
-  //     ),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.center,
-  //       children: [
-  //         Text(
-  //           'Impedance vs Frequency',
-  //           style: TextStyle(
-  //             color: AppTheme.text1,
-  //             fontSize: 18,
-  //             fontWeight: FontWeight.bold,
-  //           ),
-  //         ),
-  //         const SizedBox(height: 24),
-  //         Expanded(
-  //           child: Padding(
-  //             padding: const EdgeInsets.only(
-  //               right: 16.0,
-  //               left: 8.0,
-  //               top: 8.0,
-  //               bottom: 20.0,
-  //             ),
-  //             child: LineChart(
-  //               LineChartData(
-  //                 gridData: FlGridData(
-  //                   show: true,
-  //                   horizontalInterval: 1,
-  //                   drawVerticalLine: true,
-  //                   getDrawingHorizontalLine: (value) {
-  //                     return FlLine(
-  //                       color: AppTheme.bg2.withValues(alpha: 0.3),
-  //                       strokeWidth: 1,
-  //                     );
-  //                   },
-  //                   getDrawingVerticalLine: (value) {
-  //                     return FlLine(
-  //                       color: AppTheme.bg2.withValues(alpha: 0.3),
-  //                       strokeWidth: 1,
-  //                     );
-  //                   },
-  //                 ),
-  //                 titlesData: FlTitlesData(
-  //                   show: true,
-  //                   rightTitles: AxisTitles(
-  //                     sideTitles: SideTitles(showTitles: false),
-  //                   ),
-  //                   topTitles: AxisTitles(
-  //                     sideTitles: SideTitles(showTitles: false),
-  //                   ),
-  //                   bottomTitles: AxisTitles(
-  //                     axisNameWidget: Text(
-  //                       'Frequency (MHz)',
-  //                       style: TextStyle(
-  //                         color: AppTheme.text1,
-  //                         fontSize: 12,
-  //                       ),
-  //                     ),
-  //                     axisNameSize: 24,
-  //                     sideTitles: SideTitles(
-  //                       showTitles: true,
-  //                       reservedSize: 30,
-  //                       getTitlesWidget: (value, meta) {
-  //                         return Text(
-  //                           '${value.toInt()}',
-  //                           style: TextStyle(
-  //                             color: AppTheme.text1,
-  //                             fontSize: 12,
-  //                           ),
-  //                         );
-  //                       },
-  //                     ),
-  //                   ),
-  //                   leftTitles: AxisTitles(
-  //                     axisNameWidget: Text(
-  //                       'Impedance (Ω)',
-  //                       style: TextStyle(
-  //                         color: AppTheme.text1,
-  //                         fontSize: 12,
-  //                       ),
-  //                     ),
-  //                     axisNameSize: 24,
-  //                     sideTitles: SideTitles(
-  //                       showTitles: true,
-  //                       reservedSize: 30,
-  //                       getTitlesWidget: (value, meta) {
-  //                         return Text(
-  //                           '${value.toInt()}',
-  //                           style: TextStyle(
-  //                             color: AppTheme.text1,
-  //                             fontSize: 12,
-  //                           ),
-  //                         );
-  //                       },
-  //                     ),
-  //                   ),
-  //                 ),
-  //                 borderData: FlBorderData(
-  //                   show: true,
-  //                   border:
-  //                       Border.all(color: AppTheme.bg2.withValues(alpha: 0.5)),
-  //                 ),
-  //                 minX: minX,
-  //                 maxX: maxX,
-  //                 minY: minY,
-  //                 maxY: maxY,
-  //                 lineBarsData: [
-  //                   LineChartBarData(
-  //                     spots: impedanceData,
-  //                     isCurved: true,
-  //                     color: AppTheme.bg3,
-  //                     barWidth: 3,
-  //                     isStrokeCapRound: true,
-  //                     dotData: FlDotData(show: true),
-  //                     belowBarData: BarAreaData(
-  //                       show: true,
-  //                       color: AppTheme.bg3.withValues(alpha: 0.2),
-  //                     ),
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 }

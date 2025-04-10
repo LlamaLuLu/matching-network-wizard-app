@@ -261,7 +261,7 @@ class Calculations {
 
   // Estimate width W (in mm) using iterative approach
   static double estimateWidth(double h, double z0, double epsilonR) {
-    double w = h; // Start with W = h
+    double w = h;
     double step = h / 10;
     double targetZ0 = z0;
     for (int i = 0; i < 1000; i++) {
@@ -279,7 +279,7 @@ class Calculations {
       if ((z - targetZ0).abs() < 0.1) return w * 1000; // return mm
       w += (z > targetZ0) ? step : -step;
     }
-    return -1; // If no solution found
+    return 1; // If no solution found
   }
 
   // Get track length for given electrical angle (e.g. 90°)

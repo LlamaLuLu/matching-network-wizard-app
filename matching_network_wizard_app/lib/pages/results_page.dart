@@ -29,9 +29,18 @@ class _ResultsPageState extends State<ResultsPage> {
   String matchingNetwork = '';
   bool autoMode = false;
   bool isMatched = false;
-  List<double> userInputs = [0, 0, 0, 0];
-  List<double> calculatedData = [0, 0, 0, 0, 0, 0, 0, 0];
-  List<double> capIndValues = [0, 0, 0, 0, 0, 0, 0, 0];
+  List<double> userInputs = [0, 0, 0, 0]; // [z0, zLRe, zLIm, f]
+  List<double> calculatedData = [0, 0, 0, 0, 0, 0, 0, 0]; //
+  List<double> capIndValues = [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ]; // [xA[0], xA[1], bA[0], bA[1], xB[0], xB[1], bB[0], bB[1]]
 
   // for quarterwave
   List<ImpedancePoint> quarterWavePts = [];
@@ -39,6 +48,8 @@ class _ResultsPageState extends State<ResultsPage> {
   // for lumped
   List<FlSpot> lumpedSeriesPts = [];
   List<FlSpot> lumpedShuntPts = [];
+  // for single stub
+  List<FlSpot> singleStubPts = [];
 
   @override
   void initState() {
@@ -66,6 +77,7 @@ class _ResultsPageState extends State<ResultsPage> {
     // matching network type & calculated data
     matchingNetworkType = await SavedData.getMatchingNetworkType();
     debugPrint('Retrieved Matching Network Type: $matchingNetworkType');
+
     if (matchingNetworkType == 'quarterwave') {
       matchingNetwork = 'Quarter Wave Transformer';
 
@@ -74,6 +86,14 @@ class _ResultsPageState extends State<ResultsPage> {
       debugPrint('ZQWT: $zQWT, LambdaDiv4: $lambdaDiv4');
 
       calculatedData = [zQWT, lambdaDiv4];
+
+      quarterWavePts = computeQuarterWaveSweep(
+        ZL: zL,
+        Z0: z0,
+        f0MHz: f,
+      );
+      flSpots = ImpedanceGraph.impedancePointsToFlSpots(quarterWavePts,
+          mode: 'magnitude');
     } else if (matchingNetworkType == 'lumped') {
       matchingNetwork = 'Lumped Element Matching';
 
@@ -97,6 +117,21 @@ class _ResultsPageState extends State<ResultsPage> {
         capIndValuesList[7],
       ];
       debugPrint('Capacitance and Inductance Values: $capIndValues');
+
+      lumpedSeriesPts = ImpedanceGraph.generateLumpedElementImpedanceGraph(
+        zlReal: zL.real,
+        zlImag: zL.imaginary,
+        z0: z0,
+        f0MHz: f,
+        seriesFirst: true,
+      );
+      lumpedShuntPts = ImpedanceGraph.generateLumpedElementImpedanceGraph(
+        zlReal: zL.real,
+        zlImag: zL.imaginary,
+        z0: z0,
+        f0MHz: f,
+        seriesFirst: false, // <- switch to shunt-first
+      );
     } else if (matchingNetworkType == 'singlestub') {
       matchingNetwork = 'Single Stub Tuning';
 
@@ -120,32 +155,29 @@ class _ResultsPageState extends State<ResultsPage> {
         lShortDivLambda[0],
         lShortDivLambda[1]
       ];
+
+      Map<String, double> stubParams =
+          ImpedanceGraph.computeSingleStubParameters(
+        zL: zL,
+        z0: z0,
+      );
+
+      // Get the calculated parameters
+      double distanceToLoad = stubParams['distanceToLoad']!;
+      double stubLength = stubParams['stubLength']!;
+
+      // Generate impedance graph data
+      singleStubPts = ImpedanceGraph.generateSingleStubImpedanceGraph(
+        zlReal: zL.real,
+        zlImag: zL.imaginary,
+        z0: z0,
+        f0MHz: f,
+        distanceToLoad: distanceToLoad,
+        stubLength: stubLength,
+      );
     } else {
       matchingNetwork = 'Auto-Matching Wizard';
     }
-
-    quarterWavePts = computeQuarterWaveSweep(
-      ZL: zL,
-      Z0: z0,
-      f0MHz: f,
-    );
-    flSpots = ImpedanceGraph.impedancePointsToFlSpots(quarterWavePts,
-        mode: 'magnitude');
-
-    lumpedSeriesPts = ImpedanceGraph.generateLumpedElementImpedanceGraph(
-      zlReal: zL.real,
-      zlImag: zL.imaginary,
-      z0: z0,
-      f0MHz: f,
-      seriesFirst: true,
-    );
-    lumpedShuntPts = ImpedanceGraph.generateLumpedElementImpedanceGraph(
-      zlReal: zL.real,
-      zlImag: zL.imaginary,
-      z0: z0,
-      f0MHz: f,
-      seriesFirst: false, // <- switch to shunt-first
-    );
 
     setState(() {});
   }
@@ -228,14 +260,18 @@ class _ResultsPageState extends State<ResultsPage> {
                     AppWidgets.buildCircuitDiagram(
                         matchingNetwork, matchingNetworkType),
                     if (matchingNetworkType == 'quarterwave')
-                      AppWidgets.buildImpedanceGraph(flSpots),
+                      AppWidgets.buildImpedanceGraph(flSpots,
+                          userFrequency: userInputs[3]),
                     if (matchingNetworkType == 'lumped')
                       AppWidgets.buildImpedanceGraph(
                         lumpedSeriesPts,
                         secondaryData: lumpedShuntPts,
+                        userFrequency: userInputs[3],
                       ),
                     if (matchingNetworkType == 'singlestub')
-                      AppWidgets.buildImpedanceGraph(flSpots),
+                      AppWidgets.buildImpedanceGraph(
+                        singleStubPts,
+                      ),
                   ],
                   options: CarouselOptions(
                     height: double.infinity,

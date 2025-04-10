@@ -58,14 +58,19 @@ class ButtonFuncs {
   static void pcbInputsBtn(
       BuildContext context,
       TextEditingController hController,
-      TextEditingController epsilonRController) async {
+      TextEditingController epsilonRController,
+      TextEditingController fController) async {
     double h = double.tryParse(hController.text) ?? 1.6; // default for FR4
     h *= pow(10, -3);
     double epsilonR =
         double.tryParse(epsilonRController.text) ?? 4.4; // default for FR4
+    double savedF = await SavedData.getF();
+
+    double f = double.tryParse(fController.text) ?? (savedF / pow(10, 6));
+    f *= pow(10, 9); // convert to GHz
     debugPrint('Processed PCB Inputs: \n h: $h, epsilonR: $epsilonR');
 
-    await SavedData.savePCBInputsData(h, epsilonR);
+    await SavedData.savePCBInputsData(h, epsilonR, f);
 
     Navigator.pushNamed(context, '/pcb');
   }

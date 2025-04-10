@@ -86,7 +86,7 @@ class _PcbInputsPageState extends State<PcbInputsPage> {
                   child: AppWidgets.pinkButton(
                     'Next',
                     () => ButtonFuncs.pcbInputsBtn(
-                        context, hController, epsilonRController),
+                        context, hController, epsilonRController, fController),
                   )),
             ],
           ),
