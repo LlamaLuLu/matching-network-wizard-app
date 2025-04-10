@@ -1,5 +1,6 @@
 import 'package:carousel_slider/carousel_options.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:complex/complex.dart';
 import 'package:flutter/material.dart';
 import 'package:matching_network_wizard_app/utils/app_theme.dart';
 import 'package:matching_network_wizard_app/utils/app_widgets.dart';
@@ -21,8 +22,17 @@ class _PcbPageState extends State<PcbPage> {
   int _currentIndex = 0;
 
   String matchingNetwork = '';
-  List<double> userInputs = [0, 0, 0, 0]; // [height, epsilonR, z0, f]
-  List<double> calculatedData = [0, 0]; // [width, length]
+  List<double> userInputs = [
+    0,
+    0,
+    0,
+    0,
+    0
+  ]; // [height, epsilonR, z0, f, zLRe, zLIm]
+  List<double> calculatedData = [0, 0, 0]; // [width, length]
+  Map<String, double>? quarterWaveResults;
+  Map<String, double>? singleStubResults;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -35,25 +45,40 @@ class _PcbPageState extends State<PcbPage> {
     double epsilonR = await SavedData.getEpsilonR();
     double z0 = await SavedData.getZ0();
     double f = await SavedData.getF();
-    userInputs = [height * 1000, epsilonR, z0, f];
+    Complex zL = await SavedData.getZL();
+    double zLRe = zL.real;
+    double zLIm = zL.imaginary;
+    userInputs = [height * 1000, epsilonR, z0, f, zLRe, zLIm];
 
-    double width = await SavedData.getWidth();
-    width = Calculations.estimateWidth(height, z0, epsilonR);
-    double length = await SavedData.getLength();
+    // Calculate both solutions
+    quarterWaveResults =
+        Calculations.quarterWaveTransformer(z0, zLRe, f, height, epsilonR);
+    singleStubResults = Calculations.singleStubMatch(
+        z0, zLRe, zLIm, f, height, epsilonR, true); // true for open stub
 
     String matchingNetworkType = await SavedData.getMatchingNetworkType();
     if (matchingNetworkType == 'quarterwave') {
       matchingNetwork = 'Quarter-Wave\n';
-      double qLength = Calculations.getTrackLength(90, z0, height, epsilonR, f);
-      calculatedData = [width * 1000, qLength * 1000];
+
+      double width = quarterWaveResults!['width']!;
+      double length = quarterWaveResults!['length']!;
+      calculatedData = [width, length];
     } else if (matchingNetworkType == 'singlestub') {
       matchingNetwork = 'Stub ';
-      double stubLength =
-          Calculations.getTrackLength(37.2, z0, height, epsilonR, f);
-      calculatedData = [width * 1000, stubLength * 1000];
+
+      double width = Calculations.estimateWidth(z0, height, epsilonR);
+      double stubLength = singleStubResults!['stubLength']!;
+      double distanceToStub = singleStubResults!['distanceToStub']!;
+      calculatedData = [width, stubLength, distanceToStub];
+    } else {
+      // Default case
+      matchingNetwork = 'Unknown';
+      calculatedData = [];
     }
 
-    setState(() {});
+    setState(() {
+      isLoading = false;
+    });
   }
 
   Widget build(BuildContext context) {

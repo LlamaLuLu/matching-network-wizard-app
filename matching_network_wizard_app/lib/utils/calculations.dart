@@ -247,47 +247,204 @@ class Calculations {
 
   //--------------------------- PCB DESIGN --------------------------------//
   // Calculate ε_eff (Effective dielectric constant)
-  static double calcEpsilonEff(double w, double h, double epsilonR) {
+  static double calcEpsilonEff(double w, double h, double er) {
     double whRatio = w / h;
-    return (epsilonR + 1) / 2 +
-        ((epsilonR - 1) / 2) * (1 / sqrt(1 + 12 / whRatio));
+    if (whRatio < 1) {
+      return (er + 1) / 2 +
+          ((er - 1) / 2) *
+              (1 / sqrt(1 + 12 / whRatio) + 0.04 * pow(1 - whRatio, 2));
+    } else {
+      return (er + 1) / 2 + ((er - 1) / 2) * (1 / sqrt(1 + 12 / whRatio));
+    }
   }
 
   // Guided wavelength λg in mm
   static double calcLambdaG(double epsilonEff, double f) {
-    double lambda = Constants.C / (f * sqrt(epsilonEff)); // in meters
+    // f should be in GHz
+    double fGHz = f;
+    if (f > 1e9) {
+      fGHz = f / 1e9; // Convert Hz to GHz if needed
+    }
+
+    // Add safeguards against division by zero or near-zero
+    if (fGHz < 1e-6 || epsilonEff < 1e-6) {
+      return 0.0;
+    }
+
+    double lambda = Constants.C / (fGHz * 1e9 * sqrt(epsilonEff)); // in meters
     return lambda * 1000; // Convert to mm
   }
 
-  // Estimate width W (in mm) using iterative approach
-  static double estimateWidth(double h, double z0, double epsilonR) {
-    double w = h;
-    double step = h / 10;
-    double targetZ0 = z0;
-    for (int i = 0; i < 1000; i++) {
-      double whRatio = w / h;
-      double eeff = calcEpsilonEff(w, h, epsilonR);
-      double z;
+// Calculate impedance Z0 in ohms
+  static double calcZ0(double w, double h, double er) {
+    double whRatio = w / h;
+    double eeff = calcEpsilonEff(w, h, er);
 
-      if (whRatio <= 2) {
-        z = (60 / sqrt(eeff)) * log(8 / whRatio + 0.25 * whRatio);
-      } else {
-        z = (120 * pi) /
-            (sqrt(eeff) * (whRatio + 1.393 + 0.667 * log(whRatio + 1.444)));
-      }
-
-      if ((z - targetZ0).abs() < 0.1) return w * 1000; // return mm
-      w += (z > targetZ0) ? step : -step;
+    if (whRatio <= 1) {
+      return (60 / sqrt(eeff)) * log((8 * h / w) + (0.25 * w / h));
+    } else {
+      return (120 * pi) /
+          (sqrt(eeff) * (whRatio + 1.393 + 0.667 * log(whRatio + 1.444)));
     }
-    return 1; // If no solution found
   }
 
-  // Get track length for given electrical angle (e.g. 90°)
+// Estimate width W (in mm) for a given impedance Z0
+  static double estimateWidth(double z0, double h, double er) {
+    // h in mm, z0 in ohms
+    double w = h; // Initial guess
+    double step = h / 10;
+
+    for (int i = 0; i < 1000; i++) {
+      double calculatedZ0 =
+          calcZ0(w / 1000, h / 1000, er); // Convert to meters for calculation
+
+      if ((calculatedZ0 - z0).abs() < 0.1) {
+        return w; // Return width in mm
+      }
+
+      // Adjust width based on impedance comparison
+      if (calculatedZ0 > z0) {
+        w += step; // Wider track for lower impedance
+      } else {
+        w -= step; // Narrower track for higher impedance
+      }
+
+      // Reduce step size as we get closer
+      if (i % 100 == 0) step /= 2;
+    }
+
+    return w; // Return best approximation
+  }
+
+  // Calculate quarter-wave transformer
+  static Map<String, double> quarterWaveTransformer(
+      double z0, double zLoad, double f, double h, double er) {
+    // Calculate characteristic impedance of quarter-wave section
+    double zT = sqrt(z0 * zLoad);
+
+    // Calculate the width of the quarter-wave section
+    double width = estimateWidth(zT, h, er);
+
+    // Calculate effective dielectric constant for this width
+    double eeff = calcEpsilonEff(width / 1000, h / 1000, er);
+
+    // Calculate the guided wavelength
+    double lambdaG = calcLambdaG(eeff, f);
+
+    // Quarter wavelength
+    double length = lambdaG / 4;
+
+    return {
+      'impedance': zT,
+      'width': width,
+      'length': length,
+    };
+  }
+
+  // Calculate single stub match
+  static Map<String, double> singleStubMatch(double z0, double zReal,
+      double zImag, double f, double h, double er, bool isOpenStub) {
+    // Normalize the load impedance
+    Complex zL = Complex(zReal, zImag) / z0;
+
+    // Calculate admittance
+    Complex yL = Complex(1, 0) / zL;
+
+    // First, find the distance where the normalized conductance equals 1
+    double d = 0;
+    double dStep = 1.0; // 1 degree step for searching
+    double bestDiff = double.infinity;
+    double bestD = 0;
+
+    for (d = 0; d < 360; d += dStep) {
+      double beta = d * pi / 180; // Convert to radians
+
+      // Calculate admittance at distance d
+      double theta = 2 * beta; // Electrical length in radians
+      Complex numerator = zL * Complex.polar(1, theta) + Complex(z0, 0);
+      Complex denominator = Complex(z0, 0) * Complex.polar(1, theta) + zL;
+      Complex zd = Complex(z0, 0) * (numerator / denominator);
+      Complex yd = Complex(1, 0) / (zd / z0);
+
+      // Check how close the conductance (real part) is to 1
+      double diff = (yd.real - 1).abs();
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestD = d;
+      }
+
+      // Accept if we're close enough
+      if (diff < 0.01) break;
+    }
+
+    // Use the best distance found
+    d = bestD;
+    double beta = d * pi / 180;
+
+    // Calculate admittance at this distance
+    Complex numerator = zL * Complex.polar(1, 2 * beta) + Complex(z0, 0);
+    Complex denominator = Complex(z0, 0) * Complex.polar(1, 2 * beta) + zL;
+    Complex zd = Complex(z0, 0) * (numerator / denominator);
+    Complex yd = Complex(1, 0) / (zd / z0);
+
+    // The stub must cancel the susceptance
+    double b = -yd.imaginary;
+
+    // Calculate stub length
+    double stubAngle;
+    if (isOpenStub) {
+      // For open stub: B = tan(βl)
+      stubAngle = atan(b) * 180 / pi;
+      if (stubAngle < 0) stubAngle += 180; // Ensure positive length
+    } else {
+      // For shorted stub: B = -cot(βl)
+      stubAngle = atan(-1 / b) * 180 / pi;
+      if (stubAngle < 0) stubAngle += 180; // Ensure positive length
+    }
+
+    // Calculate physical lengths
+    double width = estimateWidth(z0, h, er);
+    double eeff = calcEpsilonEff(width / 1000, h / 1000, er);
+    double lambdaG = calcLambdaG(eeff, f);
+
+    double distanceToStub = (d / 360) * lambdaG;
+    double stubLength = (stubAngle / 360) * lambdaG;
+
+    return {
+      'distanceToStub': distanceToStub,
+      'stubLength': stubLength,
+      'mainLineWidth': width,
+      'electricalLengthToStub': d,
+      'stubElectricalLength': stubAngle,
+    };
+  }
+
+  // // Main function to calculate both solutions based on user inputs
+  // static Map<String, Map<String, double>> calculateMicrostripSolutions(
+  //     double z0, double f, double h, double er,
+  //     {double zLoad = 75.0, double zImag = 0.0}) {
+  //   // Calculate quarter-wave transformer
+  //   var qwt = quarterWaveTransformer(z0, zLoad, f, h, er);
+
+  //   // Calculate single stub match (open stub)
+  //   var singleStub = singleStubMatch(z0, zLoad, zImag, f, h, er, true);
+
+  //   return {
+  //     'quarterWave': qwt,
+  //     'singleStub': singleStub,
+  //   };
+  // }
+
+  // Track length calculation for a given electrical length in degrees
   static double getTrackLength(
-      double degrees, double z0, double h, double epsilonR, double f) {
-    double w = estimateWidth(h, z0, epsilonR);
-    double epsilonEff = calcEpsilonEff(w, h, epsilonR);
+      double degrees, double z0, double h, double er, double f) {
+    // h in mm, f in GHz, z0 in ohms, returns length in mm
+    double w = estimateWidth(z0, h, er); // Width in mm
+    double epsilonEff = calcEpsilonEff(w / 1000, h / 1000, er);
     double lambdaG = calcLambdaG(epsilonEff, f);
-    return (degrees / 360) * lambdaG;
+    double length = (degrees / 360.0) * lambdaG; // Length in mm
+
+    // Ensure we never return -0 or negative values
+    return length.abs() < 1e-10 ? 0.0 : length;
   }
 }
