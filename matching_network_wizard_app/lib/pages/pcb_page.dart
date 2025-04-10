@@ -147,9 +147,21 @@ class _PcbPageState extends State<PcbPage> {
                 child: CarouselSlider(
                   items: [
                     AppWidgets.buildPCBParametersCard(
-                        userInputs, calculatedData, matchingNetwork),
+                      userInputs,
+                      calculatedData,
+                      matchingNetwork,
+                      quarterWaveResults: matchingNetwork.contains('Quarter')
+                          ? quarterWaveResults
+                          : null,
+                      singleStubResults: matchingNetwork.contains('Stub')
+                          ? singleStubResults
+                          : null,
+                    ),
                     AppWidgets.buildPCBDiagram(
-                        calculatedData[0], userInputs[0]),
+                      calculatedData,
+                      userInputs,
+                      matchingNetwork,
+                    ),
                   ],
                   options: CarouselOptions(
                     height: double.infinity,

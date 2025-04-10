@@ -3,7 +3,10 @@ import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:matching_network_wizard_app/utils/app_theme.dart';
+import 'package:matching_network_wizard_app/utils/calculations.dart';
+import 'package:matching_network_wizard_app/utils/quarter_wave_painter.dart';
 import 'package:matching_network_wizard_app/utils/saved_data.dart';
+import 'package:matching_network_wizard_app/utils/stub_match_painter.dart';
 
 class AppWidgets {
   //--------------------- BUTTONS ------------------------//
@@ -701,7 +704,9 @@ class AppWidgets {
   }
 
   static Widget buildPCBParametersCard(List<double> userInputs,
-      List<double> calculatedData, String matchingNetwork) {
+      List<double> calculatedData, String matchingNetwork,
+      {Map<String, double>? quarterWaveResults,
+      Map<String, double>? singleStubResults}) {
     return Container(
       padding: const EdgeInsets.only(top: 40, left: 30, right: 30, bottom: 20),
       decoration: BoxDecoration(
@@ -733,10 +738,29 @@ class AppWidgets {
               padding: const EdgeInsets.only(bottom: 20),
               child: Column(
                 children: [
-                  buildParameterRow('Microstrip width',
-                      '${calculatedData[0].toStringAsExponential(2)} mm'),
-                  buildParameterRow('${matchingNetwork}Length',
-                      '${calculatedData[1].toStringAsExponential(2)} mm'),
+                  if (matchingNetwork.contains('Quarter')) ...[
+                    buildParameterRow('Transformer Width',
+                        '${calculatedData[0].toStringAsExponential(2)} mm'),
+                    buildParameterRow('Transformer Length',
+                        '${calculatedData[1].toStringAsExponential(2)} mm'),
+                    if (quarterWaveResults != null)
+                      buildParameterRow('Transformer Impedance',
+                          '${quarterWaveResults['impedance']?.toStringAsFixed(1)} Ω'),
+                  ] else if (matchingNetwork.contains('Stub')) ...[
+                    buildParameterRow('Main Line Width',
+                        '${calculatedData[0].toStringAsExponential(2)} mm'),
+                    buildParameterRow('Stub Length',
+                        '${calculatedData[1].toStringAsExponential(2)} mm'),
+                    if (calculatedData.length > 2)
+                      buildParameterRow('Distance to Stub',
+                          '${calculatedData[2].toStringAsExponential(2)} mm'),
+                    if (singleStubResults != null) ...[
+                      buildParameterRow('Stub Electrical Length',
+                          '${singleStubResults['stubElectricalLength']?.toStringAsFixed(1)}°'),
+                      buildParameterRow('Distance Electrical Length',
+                          '${singleStubResults['electricalLengthToStub']?.toStringAsFixed(1)}°'),
+                    ],
+                  ],
                 ],
               ),
             ),
@@ -749,14 +773,17 @@ class AppWidgets {
             buildParameterRow('\u03B5r', userInputs[1].toString()),
             buildParameterRow('Z0', '${userInputs[2].toStringAsFixed(1)} Ω'),
             buildParameterRow(
-                'Frequency', '${userInputs[3].toStringAsExponential(3)} Hz'),
+                'Frequency', '${userInputs[3].toStringAsExponential(3)} GHz'),
+            buildParameterRow('Load Impedance',
+                '${userInputs[4].toStringAsFixed(1)} ${userInputs[5] >= 0 ? '+ j' : '- j'}${userInputs[5].abs().toStringAsFixed(1)} Ω'),
           ],
         ),
       ),
     );
   }
 
-  static Widget buildPCBDiagram(double w, double h) {
+  static Widget buildPCBDiagram(List<double> calculatedData,
+      List<double> userInputs, String matchingNetwork) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 8),
       decoration: BoxDecoration(
@@ -770,45 +797,86 @@ class AppWidgets {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            'Microstrip Dimensions',
-            style: TextStyle(
-              color: AppTheme.text1,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              '${matchingNetwork.contains('Quarter') ? 'Quarter-Wave' : 'Single Stub'} Dimensions',
+              style: TextStyle(
+                color: AppTheme.text1,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 15),
-          Image.asset(
-            'assets/microstrip_diag.PNG',
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
+            const SizedBox(height: 10),
+            Image.asset('assets/microstrip_diag.PNG', fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
               return Container(
-                color: AppTheme.bg2.withValues(alpha: 0.3),
-                child: Center(
-                  child: Icon(
+                  color: AppTheme.bg2.withValues(alpha: 0.3),
+                  child: Center(
+                      child: Icon(
                     Icons.image_not_supported,
                     size: 64,
                     color: AppTheme.text1,
-                  ),
+                  )));
+            }),
+            // Expanded(
+            //   child: matchingNetwork.contains('Quarter')
+            //       ? CustomPaint(
+            //           size: Size.infinite,
+            //           painter: QuarterWavePainter(
+            //             transformerWidth: calculatedData[0],
+            //             mainLineWidth: Calculations.estimateWidth(
+            //                 userInputs[2], userInputs[0], userInputs[1]),
+            //             substrateHeight: userInputs[0],
+            //           ),
+            //         )
+            //       : CustomPaint(
+            //           size: Size.infinite,
+            //           painter: SingleStubPainter(
+            //             mainLineWidth: calculatedData[0],
+            //             stubLength: calculatedData[1],
+            //             distanceToStub:
+            //                 calculatedData.length > 2 ? calculatedData[2] : 0,
+            //             substrateHeight: userInputs[0],
+            //           ),
+            //         ),
+            // ),
+            const SizedBox(height: 20),
+            if (matchingNetwork.contains('Quarter'))
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: Column(
+                  children: [
+                    buildParameterRow('Width',
+                        '${calculatedData[0].toStringAsExponential(2)} mm'),
+                    buildParameterRow('Length',
+                        '${calculatedData[1].toStringAsExponential(2)} mm'),
+                    buildParameterRow('Dielectric Height',
+                        '${userInputs[0].toStringAsExponential(2)} mm'),
+                  ],
                 ),
-              );
-            },
-          ),
-          const SizedBox(height: 30),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25),
-            child: Column(
-              children: [
-                buildParameterRow('w', '${w.toStringAsExponential(2)} mm'),
-                buildParameterRow('h', '${h.toStringAsExponential(2)} mm'),
-              ],
-            ),
-          ),
-        ],
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: Column(
+                  children: [
+                    buildParameterRow('Line Width',
+                        '${calculatedData[0].toStringAsExponential(2)} mm'),
+                    buildParameterRow('Stub Length',
+                        '${calculatedData[1].toStringAsExponential(2)} mm'),
+                    if (calculatedData.length > 2)
+                      buildParameterRow('Distance to Stub',
+                          '${calculatedData[2].toStringAsExponential(2)} mm'),
+                    buildParameterRow('Substrate Height',
+                        '${userInputs[0].toStringAsExponential(2)} mm'),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -196,7 +196,7 @@ class _ResultsPageState extends State<ResultsPage> {
                   // back arrow button
                   Padding(
                     padding: const EdgeInsets.only(left: 11),
-                    child: AppWidgets.backButton(context),
+                    child: AppWidgets.backButton(context, path: '/selection'),
                   ),
 
                   // heading: Results
