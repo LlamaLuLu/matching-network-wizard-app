@@ -68,12 +68,14 @@ class AppWidgets {
     for (int d = 0; d < 4; d++) {
       invalidCount = 0;
       int offset = d * 2;
+      bool hasNaN = false;
 
       // list of designs with invalid components
       for (int c = 0; c < 2; c++) {
         int index = offset + c;
 
         if (compValues[index].isNaN) {
+          hasNaN = true;
           invalidCount = 10;
           break;
         }
@@ -88,7 +90,9 @@ class AppWidgets {
       }
 
       // list of reactance differences for designs
-      double reactanceDiff = (xbValues[offset] - xbValues[offset + 1]).abs();
+      double reactanceDiff = hasNaN
+          ? double.infinity
+          : (xbValues[offset] - xbValues[offset + 1]).abs();
 
       solutionsMap[d + 1] = [invalidCount, reactanceDiff];
     }
