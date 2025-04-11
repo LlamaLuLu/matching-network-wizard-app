@@ -9,6 +9,123 @@ import 'package:matching_network_wizard_app/utils/saved_data.dart';
 import 'package:matching_network_wizard_app/utils/stub_match_painter.dart';
 
 class AppWidgets {
+  //-------------------- HELPER FUNCS --------------------//
+  static String capOrInd(String param, double value) {
+    // if X pos -> inductor, if X neg -> capacitor
+    // if B pos -> capacitor, if B neg -> inductor
+
+    // X
+    if ((param == 'x' || param == 'X') && (value > 0)) {
+      return 'Inductor';
+    } else if ((param == 'x' || param == 'X') && (value < 0)) {
+      return 'Capacitor';
+    }
+    // B
+    else if ((param == 'b' || param == 'B') && (value > 0)) {
+      return 'Capacitor';
+    } else if ((param == 'b' || param == 'B') && (value < 0)) {
+      return 'Inductor';
+    } else {
+      return 'None';
+    }
+  }
+
+  static String capOrIndValue(double value, String capOrInd) {
+    if (capOrInd == 'Capacitor') {
+      return '${value.toStringAsExponential(3)} F';
+    } else if (capOrInd == 'Inductor') {
+      return '${value.toStringAsExponential(3)} H';
+    } else {
+      return 'NaN';
+    }
+  }
+
+  static bool isValidCap(double cVal) {
+    if (cVal < pow(1, -12) || cVal > pow(5, -9)) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  static bool isValidInd(double lVal) {
+    if (lVal < pow(5, -9) || lVal > pow(1, -6)) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  static int bestLumpedSolution(
+      List<String> params, List<double> xbValues, List<double> compValues) {
+    // look for best solution for lumped element:
+    Map<int, List<dynamic>> solutionsMap =
+        {}; // {1: [invalidCount, reactanceDiff]}
+
+    int invalidCount = 0;
+
+    // for each solution:
+    for (int d = 0; d < 4; d++) {
+      invalidCount = 0;
+      int offset = d * 2;
+
+      // list of designs with invalid components
+      for (int c = 0; c < 2; c++) {
+        int index = offset + c;
+
+        if (compValues[index].isNaN) {
+          invalidCount = 10;
+          break;
+        }
+
+        final capInd = capOrInd(params[index], xbValues[index]);
+
+        if (capInd == 'Capacitor') {
+          if (!isValidCap(compValues[index])) invalidCount++;
+        } else {
+          if (!isValidInd(compValues[index])) invalidCount++;
+        }
+      }
+
+      // list of reactance differences for designs
+      double reactanceDiff = (xbValues[offset] - xbValues[offset + 1]).abs();
+
+      solutionsMap[d + 1] = [invalidCount, reactanceDiff];
+    }
+
+    debugPrint(solutionsMap.toString());
+
+    // Get the best solution: lowest invalidCount, then lowest reactanceDiff
+    int bestSolution = -1;
+    int minInvalid = 1 << 30;
+    double minReactance = double.infinity;
+
+    solutionsMap.forEach((index, values) {
+      int count = values[0];
+      double react = values[1];
+
+      if (count < minInvalid || (count == minInvalid && react < minReactance)) {
+        minInvalid = count;
+        minReactance = react;
+        bestSolution = index;
+      }
+    });
+
+    return bestSolution;
+  }
+
+  static int bestStubSolution(List<double> dDivLambdas) {
+    int bestSolution = 0;
+
+    if (dDivLambdas[0] < dDivLambdas[1]) {
+      bestSolution = 1;
+    } else {
+      bestSolution = 2;
+    }
+
+    return bestSolution;
+  }
+
   //--------------------- BUTTONS ------------------------//
   static Widget backButton(BuildContext context, {String? path}) {
     return Align(
@@ -241,62 +358,6 @@ class AppWidgets {
 
   // FOR CAROUSEL SLIDER:
 
-  static String capOrInd(String param, double value) {
-    // if X pos -> inductor, if X neg -> capacitor
-    // if B pos -> capacitor, if B neg -> inductor
-
-    // X
-    if ((param == 'x' || param == 'X') && (value > 0)) {
-      return 'Inductor';
-    } else if ((param == 'x' || param == 'X') && (value < 0)) {
-      return 'Capacitor';
-    }
-    // B
-    else if ((param == 'b' || param == 'B') && (value > 0)) {
-      return 'Capacitor';
-    } else if ((param == 'b' || param == 'B') && (value < 0)) {
-      return 'Inductor';
-    } else {
-      return 'None';
-    }
-  }
-
-  static String capOrIndValue(double value, String capOrInd) {
-    if (capOrInd == 'Capacitor') {
-      return '${value.toStringAsExponential(3)} F';
-    } else if (capOrInd == 'Inductor') {
-      return '${value.toStringAsExponential(3)} H';
-    } else {
-      return 'NaN';
-    }
-  }
-
-  static bool isValidCap(double cVal) {
-    if (cVal < pow(1, -12) || cVal > pow(5, -9)) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-
-  static bool isValidInd(double lVal) {
-    if (lVal < pow(5, -9) || lVal > pow(1, -6)) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-
-  static bool isValidSolution(List<bool> validComponents) {
-    // Check if all components are valid
-    for (bool isValid in validComponents) {
-      if (!isValid) {
-        return false; // Return false if any component is invalid
-      }
-    }
-    return true; // All components are valid
-  }
-
   static Widget buildParametersCard(
       String matchingNetworkType,
       String matchingNetwork,
@@ -367,11 +428,43 @@ class AppWidgets {
                         // series first
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8),
-                          child: resultHeading2('Series First Solution'),
+                          child: resultHeading2('Series First Design'),
                         ),
+
+                        // DESIGN 1
                         Padding(
                           padding: const EdgeInsets.only(bottom: 5),
-                          child: resultHeading3('Design 1'),
+                          child: resultHeading3((1 ==
+                                  bestLumpedSolution([
+                                    'X',
+                                    'B',
+                                    'X',
+                                    'B',
+                                    'B',
+                                    'X',
+                                    'B',
+                                    'X',
+                                  ], [
+                                    calculatedData[4],
+                                    calculatedData[6],
+                                    calculatedData[5],
+                                    calculatedData[7],
+                                    calculatedData[2],
+                                    calculatedData[0],
+                                    calculatedData[3],
+                                    calculatedData[1],
+                                  ], [
+                                    capIndValues[4],
+                                    capIndValues[6],
+                                    capIndValues[5],
+                                    capIndValues[7],
+                                    capIndValues[2],
+                                    capIndValues[0],
+                                    capIndValues[3],
+                                    capIndValues[1],
+                                  ]))
+                              ? 'Design 1: Best Solution'
+                              : 'Design 1'),
                         ),
                         buildParameterRow(
                             'X1', calculatedData[4].toStringAsExponential(3)),
@@ -379,7 +472,6 @@ class AppWidgets {
                             (capOrInd('X', calculatedData[4])),
                             capOrIndValue(capIndValues[4],
                                 capOrInd('X', calculatedData[4]))),
-
                         buildParameterRow(
                             'B1', calculatedData[6].toStringAsExponential(3)),
                         buildParameterRow(
@@ -387,9 +479,40 @@ class AppWidgets {
                             capOrIndValue(capIndValues[6],
                                 capOrInd('b', calculatedData[6]))),
 
+                        // DESIGN 2
                         Padding(
                           padding: const EdgeInsets.only(bottom: 5),
-                          child: resultHeading3('Design 2'),
+                          child: resultHeading3((2 ==
+                                  bestLumpedSolution([
+                                    'X',
+                                    'B',
+                                    'X',
+                                    'B',
+                                    'B',
+                                    'X',
+                                    'B',
+                                    'X',
+                                  ], [
+                                    calculatedData[4],
+                                    calculatedData[6],
+                                    calculatedData[5],
+                                    calculatedData[7],
+                                    calculatedData[2],
+                                    calculatedData[0],
+                                    calculatedData[3],
+                                    calculatedData[1],
+                                  ], [
+                                    capIndValues[4],
+                                    capIndValues[6],
+                                    capIndValues[5],
+                                    capIndValues[7],
+                                    capIndValues[2],
+                                    capIndValues[0],
+                                    capIndValues[3],
+                                    capIndValues[1],
+                                  ]))
+                              ? 'Design 2: Best Solution'
+                              : 'Design 2'),
                         ),
                         buildParameterRow(
                             'X2', calculatedData[5].toStringAsExponential(3)),
@@ -408,11 +531,43 @@ class AppWidgets {
                         // shunt first
                         Padding(
                           padding: const EdgeInsets.only(top: 15, bottom: 8),
-                          child: resultHeading2('Shunt First Solution'),
+                          child: resultHeading2('Shunt First Design'),
                         ),
+
+                        // DESIGN 3
                         Padding(
                           padding: const EdgeInsets.only(bottom: 5),
-                          child: resultHeading3('Design 1'),
+                          child: resultHeading3((3 ==
+                                  bestLumpedSolution([
+                                    'X',
+                                    'B',
+                                    'X',
+                                    'B',
+                                    'B',
+                                    'X',
+                                    'B',
+                                    'X',
+                                  ], [
+                                    calculatedData[4],
+                                    calculatedData[6],
+                                    calculatedData[5],
+                                    calculatedData[7],
+                                    calculatedData[2],
+                                    calculatedData[0],
+                                    calculatedData[3],
+                                    calculatedData[1],
+                                  ], [
+                                    capIndValues[4],
+                                    capIndValues[6],
+                                    capIndValues[5],
+                                    capIndValues[7],
+                                    capIndValues[2],
+                                    capIndValues[0],
+                                    capIndValues[3],
+                                    capIndValues[1],
+                                  ]))
+                              ? 'Design 1: Best Solution'
+                              : 'Design 1'),
                         ),
                         buildParameterRow(
                             'B1', calculatedData[2].toStringAsExponential(3)),
@@ -428,9 +583,40 @@ class AppWidgets {
                             capOrIndValue(capIndValues[0],
                                 capOrInd('X', calculatedData[0]))),
 
+                        // DESIGN 4
                         Padding(
                           padding: const EdgeInsets.only(bottom: 5),
-                          child: resultHeading3('Design 2'),
+                          child: resultHeading3((4 ==
+                                  bestLumpedSolution([
+                                    'X',
+                                    'B',
+                                    'X',
+                                    'B',
+                                    'B',
+                                    'X',
+                                    'B',
+                                    'X',
+                                  ], [
+                                    calculatedData[4],
+                                    calculatedData[6],
+                                    calculatedData[5],
+                                    calculatedData[7],
+                                    calculatedData[2],
+                                    calculatedData[0],
+                                    calculatedData[3],
+                                    calculatedData[1],
+                                  ], [
+                                    capIndValues[4],
+                                    capIndValues[6],
+                                    capIndValues[5],
+                                    capIndValues[7],
+                                    capIndValues[2],
+                                    capIndValues[0],
+                                    capIndValues[3],
+                                    capIndValues[1],
+                                  ]))
+                              ? 'Design 2: Best Solution'
+                              : 'Design 2'),
                         ),
                         buildParameterRow(
                             'B2', calculatedData[3].toStringAsExponential(3)),
@@ -451,11 +637,11 @@ class AppWidgets {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // shunt stub 1
+                        // DESIGN 1
                         Padding(
                           padding: const EdgeInsets.only(bottom: 5),
                           child: Text(
-                            'Shunt Stub Solution 1',
+                            'Shunt Stub Design 1',
                             style: TextStyle(
                               color: AppTheme.text1,
                               fontSize: 16,
@@ -469,16 +655,25 @@ class AppWidgets {
                             calculatedData[2].toStringAsExponential(3)),
                         buildParameterRow(
                             'B', calculatedData[4].toStringAsExponential(3)),
+                        if (1 ==
+                            bestStubSolution(
+                                [calculatedData[2], calculatedData[3]]))
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: resultHeading3('Best Solution: Open'),
+                          ),
                         buildParameterRow('L/\u03BB (open)',
                             calculatedData[6].toStringAsExponential(3)),
+                        SizedBox(height: 10),
+
                         buildParameterRow('L/\u03BB (short)',
                             calculatedData[8].toStringAsExponential(3)),
 
-                        // shunt stub 2
+                        // DESIGN 2
                         Padding(
                           padding: const EdgeInsets.only(top: 15, bottom: 5),
                           child: Text(
-                            'Shunt Stub Solution 2',
+                            'Shunt Stub Design 2',
                             style: TextStyle(
                               color: AppTheme.text1,
                               fontSize: 16,
@@ -492,8 +687,16 @@ class AppWidgets {
                             calculatedData[3].toStringAsExponential(3)),
                         buildParameterRow(
                             'B', calculatedData[5].toStringAsExponential(3)),
+                        if (2 ==
+                            bestStubSolution(
+                                [calculatedData[2], calculatedData[3]]))
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: resultHeading3('Best Solution: Open'),
+                          ),
                         buildParameterRow('L/\u03BB (open)',
                             calculatedData[7].toStringAsExponential(3)),
+                        SizedBox(height: 10),
                         buildParameterRow('L/\u03BB (short)',
                             calculatedData[9].toStringAsExponential(3)),
                       ],
